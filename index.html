@@ -7,185 +7,130 @@
 <title>Formwheel Cook</title>
 <style>
 *{box-sizing:border-box}
-:root{--bg:#fff8f1;--card:#fff;--ink:#2a211c;--muted:#77685f;--line:#eaded5;--accent:#ff7847;--accent2:#fff0e8;--good:#1f8a5b;--warn:#a76a00;--bad:#ba3535;--blue:#3478d4}
+:root{--bg:#fff8f1;--card:#fff;--ink:#2a211c;--muted:#77685f;--line:#eaded5;--accent:#ff7847;--accent2:#fff0e8;--good:#1f8a5b;--warn:#a76a00;--bad:#ba3535}
 html,body{margin:0;min-height:100%;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;background:var(--bg);color:var(--ink)}
 button{font:inherit;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowed}
 .header{position:sticky;top:0;z-index:50;height:62px;display:flex;align-items:center;justify-content:space-between;padding:0 15px;background:rgba(255,248,241,.95);backdrop-filter:blur(15px);border-bottom:1px solid var(--line)}
 .logo{display:flex;align-items:center;gap:8px;text-decoration:none;color:var(--ink);font-weight:900;font-size:21px}.mark{width:29px;height:29px;border-radius:9px;display:grid;place-items:center;background:var(--ink);color:#fff}.topBtns{display:flex;gap:7px}.topBtn{border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 10px}
-.wrap{width:min(1180px,100%);margin:auto;padding:18px 13px 50px}
-.hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}.hero h1{margin:0;font-size:clamp(27px,5vw,40px);letter-spacing:-1.4px}.hero p{margin:6px 0 0;color:var(--muted);line-height:1.55}.score{white-space:nowrap;border:1px solid var(--line);border-radius:15px;background:#fff;padding:10px 13px;font-weight:850}
-.layout{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:900px){.layout{grid-template-columns:260px 1fr 285px}}
+.wrap{width:min(1180px,100%);margin:auto;padding:18px 13px 50px}.hero{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:14px}.hero h1{margin:0;font-size:clamp(27px,5vw,40px);letter-spacing:-1.4px}.hero p{margin:6px 0 0;color:var(--muted);line-height:1.55}.score{white-space:nowrap;border:1px solid var(--line);border-radius:15px;background:#fff;padding:10px 13px;font-weight:850}
+.layout{display:grid;grid-template-columns:1fr;gap:12px}@media(min-width:900px){.layout{grid-template-columns:260px 1fr 300px}}
 .panel{background:#fff;border:1px solid var(--line);border-radius:19px;padding:14px;min-width:0}.panel h2{font-size:17px;margin:0 0 10px}.sub{font-size:12px;color:var(--muted);line-height:1.5}
 .inventory{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}@media(min-width:900px){.inventory{grid-template-columns:1fr}}
-.ing{min-height:48px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 9px;text-align:left;display:flex;align-items:center;gap:8px}.ing:hover{background:#fffaf7}.emoji{font-size:21px}.ingName{font-size:13px;font-weight:750}
-.kitchen{min-height:440px;background:linear-gradient(#fbf8f6,#f5efeb);border:1px dashed #dccdc4;border-radius:18px;padding:12px}
-.counterTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}.counterTitle b{font-size:14px}.hint{font-size:12px;color:var(--muted)}
-.items{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;min-height:135px}.food{position:relative;border:2px solid transparent;background:#fff;border-radius:13px;padding:9px 10px;min-width:105px;max-width:170px;box-shadow:0 3px 10px rgba(70,45,30,.05);text-align:left}.food.selected{border-color:var(--accent);background:var(--accent2)}.food .name{font-weight:850;font-size:13px}.food .state{font-size:11px;color:var(--muted);margin-top:3px}.food .heat{height:4px;border-radius:9px;background:#eee;margin-top:6px;overflow:hidden}.food .heat i{display:block;height:100%;background:var(--accent)}
+.ing{min-height:48px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:8px 9px;text-align:left;display:flex;align-items:center;gap:8px}.emoji{font-size:21px}.ingName{font-size:13px;font-weight:750}
+.kitchen{min-height:440px;background:linear-gradient(#fbf8f6,#f5efeb);border:1px dashed #dccdc4;border-radius:18px;padding:12px}.counterTitle{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:9px}.counterTitle b{font-size:14px}.hint{font-size:12px;color:var(--muted)}
+.items{display:flex;flex-wrap:wrap;gap:8px;align-content:flex-start;min-height:135px}.food{position:relative;border:2px solid transparent;background:#fff;border-radius:13px;padding:9px 10px;min-width:110px;max-width:190px;text-align:left}.food.selected{border-color:var(--accent);background:var(--accent2)}.food .name{font-weight:850;font-size:13px}.food .state{font-size:11px;color:var(--muted);margin-top:3px}.food .components{font-size:10px;color:#8f8179;margin-top:4px;line-height:1.35}.heat{height:4px;border-radius:9px;background:#eee;margin-top:6px;overflow:hidden}.heat i{display:block;height:100%;background:var(--accent)}
 .actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}.action{border:1px solid var(--line);background:#fff;border-radius:11px;padding:9px 10px;font-weight:750}.action.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
-.stationGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.station{border:1px solid var(--line);border-radius:14px;background:#fff;padding:11px;min-height:105px}.station.active{outline:2px solid var(--accent)}.station h3{font-size:14px;margin:0 0 6px}.station .inside{font-size:12px;color:var(--muted);min-height:34px}.stationBtns{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.mini{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 7px;font-size:12px}.mini.go{background:var(--good);color:#fff;border-color:var(--good)}
+.stationGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px}.station{border:1px solid var(--line);border-radius:14px;background:#fff;padding:11px;min-height:105px}.station h3{font-size:14px;margin:0 0 6px}.station .inside{font-size:12px;color:var(--muted);min-height:34px}.stationBtns{display:flex;gap:5px;flex-wrap:wrap;margin-top:7px}.mini{border:1px solid var(--line);background:#fff;border-radius:9px;padding:6px 7px;font-size:12px}.mini.go{background:var(--good);color:#fff;border-color:var(--good)}
 .log{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:13px;padding:9px;background:#fcfaf9}.logLine{font-size:12px;line-height:1.5;padding:4px 0;border-bottom:1px solid #f0e9e4}.logLine:last-child{border:0}
 .plate{border:2px solid #e8ddd5;border-radius:50%;width:min(240px,85%);aspect-ratio:1;margin:8px auto;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;align-content:center;gap:4px;padding:25px;background:radial-gradient(circle,#fff 60%,#faf6f3 61%)}.plate span{font-size:26px}
-.result{padding:11px;border-radius:13px;background:#f6f3f1;font-size:13px;line-height:1.6;margin-top:9px}.result.good{background:#eef9f3;color:#176d49}.result.warn{background:#fff6df;color:#7d5800}.result.bad{background:#fff0f0;color:#8b2828}
-.notice{margin-top:10px;padding:10px 11px;border-radius:12px;background:#fff7de;border:1px solid #eedb99;color:#6f5600;font-size:12px;line-height:1.5}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:90}.modal.show{display:flex}.modalCard{width:min(460px,100%);background:#fff;border-radius:20px;padding:18px}.modalCard h2{margin:0 0 8px}.modalBtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.big{border:0;border-radius:12px;padding:10px 12px;background:var(--accent);color:#fff;font-weight:800}.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.result{padding:11px;border-radius:13px;background:#f6f3f1;font-size:13px;line-height:1.6;margin-top:9px}.result.good{background:#eef9f3;color:#176d49}.result.warn{background:#fff6df;color:#7d5800}.result.bad{background:#fff0f0;color:#8b2828}.notice{margin-top:10px;padding:10px 11px;border-radius:12px;background:#fff7de;border:1px solid #eedb99;color:#6f5600;font-size:12px;line-height:1.5}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.35);display:none;align-items:center;justify-content:center;padding:16px;z-index:90}.modal.show{display:flex}.modalCard{width:min(540px,100%);max-height:86vh;overflow:auto;background:#fff;border-radius:20px;padding:18px}.modalCard h2{margin:0 0 8px}.modalCard h3{font-size:15px;margin:16px 0 6px}.manualStep{padding:10px 11px;border:1px solid var(--line);border-radius:12px;margin:7px 0;background:#fcfaf9}.manualStep b{display:block;margin-bottom:4px}.modalBtns{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}.big{border:0;border-radius:12px;padding:10px 12px;background:var(--accent);color:#fff;font-weight:800}.secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
 @media(max-width:520px){.hero{display:block}.score{display:inline-block;margin-top:10px}.stationGrid{grid-template-columns:1fr}.inventory{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
 <header class="header">
 <a class="logo" href="https://semicolonxss.github.io/Formwheel/"><span class="mark">;</span>Formwheel Cook</a>
-<div class="topBtns"><button class="topBtn" id="helpBtn">도움말</button><button class="topBtn" id="resetBtn">새 요리</button></div>
+<div class="topBtns"><button class="topBtn" id="helpBtn">📖 설명서</button><button class="topBtn" id="resetBtn">새 요리</button></div>
 </header>
 <main class="wrap">
-<div class="hero">
-<div><h1>🍳 자유 요리 시뮬레이터</h1><p>재료를 꺼내고, 손질하고, 섞고, 가열해서 원하는 음식을 직접 만들어 보세요.</p></div>
-<div class="score">⭐ 점수 <span id="score">0</span></div>
-</div>
+<div class="hero"><div><h1>🍳 자유 요리 시뮬레이터</h1><p>재료를 꺼내고 손질·혼합·가열해서 원하는 음식을 직접 만들어 보세요.</p></div><div class="score">⭐ 점수 <span id="score">미평가</span> / 100</div></div>
 <div class="layout">
+<section class="panel"><h2>🥕 재료 보관함</h2><p class="sub">재료를 누르면 작업대에 하나씩 꺼냅니다.</p><div class="inventory" id="inventory"></div></section>
 <section class="panel">
-<h2>🥕 재료 보관함</h2><p class="sub">재료를 누르면 작업대에 하나씩 꺼냅니다.</p>
-<div class="inventory" id="inventory"></div>
-</section>
-
-<section class="panel">
-<div class="counterTitle"><div><b>🧑‍🍳 작업대</b><div class="hint">음식을 눌러 선택한 뒤 손질하세요.</div></div><span class="hint" id="selectionText">선택 0개</span></div>
-<div class="kitchen">
-<div class="items" id="counter"></div>
+<div class="counterTitle"><div><b>🧑‍🍳 작업대</b><div class="hint">재료를 눌러 선택한 뒤 행동을 고르세요.</div></div><span class="hint" id="selectionText">선택 0개</span></div>
+<div class="kitchen"><div class="items" id="counter"></div>
 <div class="actions">
-<button class="action" data-act="cut">✂️ 자르기</button>
-<button class="action" data-act="mix">🥣 섞기</button>
-<button class="action" data-act="sauce">🥄 소스 섞기</button>
-<button class="action" data-act="plate">🍽️ 접시에 담기</button>
-<button class="action" data-act="trash">🗑️ 치우기</button>
+<button class="action" data-act="cut">✂️ 자르기</button><button class="action" data-act="mix">🥣 섞기</button><button class="action" data-act="plate">🍽️ 접시에 담기</button><button class="action" data-act="trash">🗑️ 치우기</button>
 </div>
-
 <div class="stationGrid">
-<div class="station" id="microwaveBox"><h3>📻 전자레인지</h3><div class="inside" id="microwaveInside">비어 있음</div><div class="stationBtns"><button class="mini" data-put="microwave">선택 재료 넣기</button><button class="mini go" data-heat="microwave">가열</button><button class="mini" data-take="microwave">꺼내기</button></div></div>
-<div class="station" id="kettleBox"><h3>☕ 커피포트</h3><div class="inside" id="kettleInside">물 없음</div><div class="stationBtns"><button class="mini" id="fillKettle">물 넣기</button><button class="mini go" id="boilKettle">끓이기</button><button class="mini" id="pourKettle">뜨거운 물 꺼내기</button></div></div>
-<div class="station" id="potBox"><h3>🍲 냄비</h3><div class="inside" id="potInside">비어 있음</div><div class="stationBtns"><button class="mini" data-put="pot">선택 재료 넣기</button><button class="mini" data-take="pot">꺼내기</button></div></div>
-<div class="station" id="panBox"><h3>🍳 후라이팬</h3><div class="inside" id="panInside">비어 있음 · 화구 없음</div><div class="stationBtns"><button class="mini" data-put="pan">선택 재료 넣기</button><button class="mini" data-take="pan">꺼내기</button></div></div>
-</div>
-</div>
-</section>
+<div class="station"><h3>📻 전자레인지</h3><div class="inside" id="microwaveInside">비어 있음</div><div class="stationBtns"><button class="mini" data-put="microwave">선택 재료 넣기</button><button class="mini go" data-heat="microwave">가열</button><button class="mini" data-take="microwave">꺼내기</button></div></div>
+<div class="station"><h3>☕ 커피포트</h3><div class="inside" id="kettleInside">물 없음</div><div class="stationBtns"><button class="mini" id="fillKettle">물 넣기</button><button class="mini go" id="boilKettle">끓이기</button><button class="mini" id="pourKettle">뜨거운 물 꺼내기</button></div></div>
+<div class="station"><h3>🍲 냄비</h3><div class="inside" id="potInside">비어 있음</div><div class="stationBtns"><button class="mini" data-put="pot">선택 재료 넣기</button><button class="mini" data-take="pot">꺼내기</button></div></div>
+<div class="station"><h3>🍳 후라이팬</h3><div class="inside" id="panInside">비어 있음 · 화구 없음</div><div class="stationBtns"><button class="mini" data-put="pan">선택 재료 넣기</button><button class="mini" data-take="pan">꺼내기</button></div></div>
+</div></div></section>
+<aside class="panel"><h2>🍽️ 완성 접시</h2><div class="plate" id="plate"><span>🍽️</span></div><button class="action primary" style="width:100%" id="judgeBtn">완성! 평가하기</button><div id="result" class="result">평가 전이에요. 버튼을 여러 번 눌러도 점수는 올라가지 않습니다.</div><div class="notice">점수는 조작 횟수가 아니라 <b>최종 음식 상태</b>만 보고 계산합니다.</div><h2 style="margin-top:14px">📜 진행 기록</h2><div class="log" id="log"></div></aside>
+</div></main>
 
-<aside class="panel">
-<h2>🍽️ 완성 접시</h2>
-<div class="plate" id="plate"><span>🍽️</span></div>
-<button class="action primary" style="width:100%" id="judgeBtn">완성! 평가하기</button>
-<div id="result" class="result">아직 완성 전이에요.</div>
-<div class="notice">실제 조리에서는 뜨거운 물·증기·전자레인지 용기에 주의하고, 고기 제품은 포장지의 조리 지시를 우선하세요. 이 페이지는 조리 감각을 익히는 시뮬레이션입니다.</div>
-<h2 style="margin-top:14px">📜 진행 기록</h2>
-<div class="log" id="log"></div>
-</aside>
-</div>
-</main>
+<div class="modal" id="heatModal"><div class="modalCard"><h2>전자레인지 가열</h2><p class="sub">같은 음식을 반복 가열하면 온도만 계속 올라가며, 너무 뜨거워지면 과조리 판정이 납니다.</p><div class="modalBtns"><button class="big heatTime" data-sec="20">20초</button><button class="big heatTime" data-sec="40">40초</button><button class="big heatTime" data-sec="60">1분</button><button class="big heatTime" data-sec="120">2분</button><button class="big secondary" id="closeHeat">취소</button></div></div></div>
 
-<div class="modal" id="heatModal" role="dialog" aria-modal="true">
-<div class="modalCard"><h2>전자레인지 가열</h2><p class="sub">시간이 길수록 더 익지만 너무 오래 가열하면 과조리됩니다.</p><div class="modalBtns">
-<button class="big heatTime" data-sec="20">20초</button><button class="big heatTime" data-sec="40">40초</button><button class="big heatTime" data-sec="60">1분</button><button class="big heatTime" data-sec="120">2분</button><button class="big secondary" id="closeHeat">취소</button>
-</div></div></div>
-
-<div class="modal" id="helpModal" role="dialog" aria-modal="true">
-<div class="modalCard"><h2>플레이 방법</h2><p>① 재료를 눌러 작업대에 꺼냅니다.<br>② 재료를 선택해서 자르거나 섞습니다.<br>③ 전자레인지·커피포트·냄비를 사용합니다.<br>④ 완성된 재료를 접시에 담습니다.<br>⑤ 자유롭게 만든 뒤 평가를 받아보세요.</p><p class="sub">예: 난 + 토마토/바비큐 소스 + 모짜렐라 + 토핑 → 전자레인지 → 접시. 스파게티 면 + 뜨거운 물 → 냄비 → 소스와 섞기 등.</p><button class="big" id="closeHelp">확인</button></div></div>
+<div class="modal" id="helpModal"><div class="modalCard">
+<h2>📖 Formwheel Cook 설명서</h2>
+<div class="manualStep"><b>1. 재료 꺼내기</b>왼쪽 재료 보관함에서 원하는 재료를 누르면 작업대에 생깁니다. 같은 재료도 여러 번 꺼낼 수 있어요.</div>
+<div class="manualStep"><b>2. 선택하기</b>작업대의 재료 카드를 누르면 주황색 테두리가 생깁니다. 여러 개를 동시에 선택할 수 있어요.</div>
+<div class="manualStep"><b>3. 자르기</b>사과·양파·버섯·파프리카·고기 같은 재료를 선택한 뒤 <b>자르기</b>를 누르면 손질 상태가 붙습니다. 이미 자른 재료를 또 잘라도 추가 점수는 없습니다.</div>
+<div class="manualStep"><b>4. 섞기 — 개선됨!</b>2개 이상의 재료를 선택하고 <b>섞기</b>를 누르면 선택한 재료가 사라지고 하나의 <b>혼합물</b>로 합쳐집니다. 혼합물 안에는 원래 재료가 모두 기억됩니다. 혼합물을 다른 재료와 다시 섞는 것도 가능합니다.</div>
+<div class="manualStep"><b>5. 가열하기</b>재료 또는 혼합물을 선택해 전자레인지에 넣은 뒤 시간을 고르세요. 상태가 차가움/생 → 데워짐 → 익음 → 과조리로 변합니다.</div>
+<div class="manualStep"><b>6. 커피포트</b><b>물 넣기 → 끓이기 → 뜨거운 물 꺼내기</b> 순서입니다. 꺼낸 뜨거운 물은 작업대 재료처럼 사용할 수 있습니다.</div>
+<div class="manualStep"><b>7. 완성하기</b>완성한 음식이나 혼합물을 선택해서 접시에 담은 뒤 <b>완성! 평가하기</b>를 누르세요.</div>
+<h3>⭐ 점수 규칙</h3>
+<p class="sub">100점 만점이며 버튼을 많이 누른다고 올라가지 않습니다. 재료 조합, 손질 여부, 적절한 가열, 완성도에 보너스가 붙고 과조리나 덜 익은 고기는 감점됩니다. 같은 완성 접시를 여러 번 평가하면 항상 같은 점수가 나옵니다.</p>
+<h3>🥣 섞기 예시</h3>
+<p class="sub">토마토 소스 + 양파 + 버섯 → “토마토 소스 + 양파 + 버섯 혼합물”<br>난 + 그 혼합물 + 모짜렐라 → 다시 섞거나 각각 조리해서 난 피자 스타일로 완성할 수 있습니다.</p>
+<button class="big" id="closeHelp">확인</button>
+</div></div>
 
 <script>
 const defs=[
-["물","💧","liquid"],["스파게티 면","🍝","pasta"],["사과","🍎","fruit"],["양송이 버섯","🍄","veg"],["다진 마늘","🧄","season"],
-["바비큐 소스","🥫","sauce"],["난","🫓","bread"],["양념된 고기","🥩","meat"],["모짜렐라","🧀","cheese"],["양파","🧅","veg"],
-["파프리카","🫑","veg"],["브라우니 믹스","🍫","mix"],["콘옥수수","🌽","veg"],["투게더 아이스크림","🍨","icecream"],
-["토마토 소스","🍅","sauce"],["베이컨","🥓","meat"]
+["물","💧","liquid"],["스파게티 면","🍝","pasta"],["사과","🍎","fruit"],["양송이 버섯","🍄","veg"],["다진 마늘","🧄","season"],["바비큐 소스","🥫","sauce"],["난","🫓","bread"],["양념된 고기","🥩","meat"],["모짜렐라","🧀","cheese"],["양파","🧅","veg"],["파프리카","🫑","veg"],["브라우니 믹스","🍫","mix"],["콘옥수수","🌽","veg"],["투게더 아이스크림","🍨","icecream"],["토마토 소스","🍅","sauce"],["베이컨","🥓","meat"]
 ].map((x,i)=>({id:"d"+i,name:x[0],emoji:x[1],type:x[2]}));
-let uid=1,items=[],plateItems=[],stations={microwave:[],pot:[],pan:[]},kettle={water:false,hot:false},score=0;
+let uid=1,items=[],plateItems=[],stations={microwave:[],pot:[],pan:[]},kettle={water:false,hot:false},lastScore=null;
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
+function baseComponents(it){return it.components?it.components.flatMap(c=>baseComponents(c)):[it]}
+function allBase(list){return list.flatMap(x=>baseComponents(x))}
 function log(msg){const d=document.createElement("div");d.className="logLine";d.textContent=msg;$("#log").prepend(d)}
-function stateText(it){
- const a=[]; if(it.cut)a.push("잘림"); if(it.mixed)a.push("섞임");
- if(it.heat>=80)a.push("과조리"); else if(it.heat>=45)a.push("익음"); else if(it.heat>=15)a.push("데워짐"); else a.push("차가움/생");
- if(it.hotWater)a.push("뜨거운 물"); return a.join(" · ");
-}
-function createItem(def){return {uid:uid++,def,cut:false,mixed:false,heat:0,hotWater:false,selected:false}}
-function renderInventory(){
- $("#inventory").innerHTML="";
- defs.forEach(d=>{const b=document.createElement("button");b.className="ing";b.innerHTML='<span class="emoji">'+d.emoji+'</span><span class="ingName">'+d.name+'</span>';b.addEventListener("click",()=>{items.push(createItem(d));log(d.name+"을(를) 작업대에 꺼냈어요.");render()});$("#inventory").appendChild(b)})
-}
-function foodButton(it){
- const b=document.createElement("button");b.className="food"+(it.selected?" selected":"");
- b.innerHTML='<div class="name">'+it.def.emoji+" "+it.def.name+'</div><div class="state">'+stateText(it)+'</div><div class="heat"><i style="width:'+Math.min(100,it.heat)+'%"></i></div>';
- b.addEventListener("click",()=>{it.selected=!it.selected;render()});return b
-}
-function render(){
- const c=$("#counter");c.innerHTML="";items.forEach(it=>c.appendChild(foodButton(it)));
- if(!items.length)c.innerHTML='<div class="hint">재료를 왼쪽 보관함에서 꺼내보세요.</div>';
- $("#selectionText").textContent="선택 "+items.filter(x=>x.selected).length+"개";
- for(const s of ["microwave","pot","pan"]){const arr=stations[s];$("#"+s+"Inside").textContent=arr.length?arr.map(x=>x.def.emoji+" "+x.def.name).join(", "):(s==="pan"?"비어 있음 · 화구 없음":"비어 있음")}
- $("#kettleInside").textContent=kettle.hot?"뜨거운 물 준비됨":kettle.water?"물 들어 있음":"물 없음";
- const p=$("#plate");p.innerHTML=plateItems.length?plateItems.map(x=>'<span title="'+x.def.name+'">'+x.def.emoji+'</span>').join(""):"<span>🍽️</span>";
- $("#score").textContent=score;
-}
+function stateText(it){const a=[];if(it.isMixture)a.push("혼합물");if(it.cut)a.push("잘림");if(it.heat>=80)a.push("과조리");else if(it.heat>=45)a.push("익음");else if(it.heat>=15)a.push("데워짐");else a.push("차가움/생");if(it.hotWater)a.push("뜨거운 물");return a.join(" · ")}
+function createItem(def){return {uid:uid++,def,cut:false,heat:0,hotWater:false,selected:false,isMixture:false,components:null}}
+function mixName(parts){const names=parts.flatMap(x=>baseComponents(x).map(c=>c.def.name));const uniq=[...new Set(names)];return uniq.slice(0,4).join(" + ")+(uniq.length>4?" 외 "+(uniq.length-4)+"개":"")+" 혼합물"}
+function mixEmoji(parts){const es=[...new Set(parts.flatMap(x=>baseComponents(x).map(c=>c.def.emoji)))];return es.slice(0,3).join("")}
+function renderInventory(){$("#inventory").innerHTML="";defs.forEach(d=>{const b=document.createElement("button");b.className="ing";b.innerHTML='<span class="emoji">'+d.emoji+'</span><span class="ingName">'+d.name+'</span>';b.addEventListener("click",()=>{items.push(createItem(d));invalidateScore();log(d.name+"을(를) 작업대에 꺼냈어요.");render()});$("#inventory").appendChild(b)})}
+function foodButton(it){const b=document.createElement("button");b.className="food"+(it.selected?" selected":"");const comp=it.isMixture?'<div class="components">'+baseComponents(it).map(x=>x.def.name).join(", ")+'</div>':"";b.innerHTML='<div class="name">'+it.def.emoji+" "+it.def.name+'</div><div class="state">'+stateText(it)+'</div>'+comp+'<div class="heat"><i style="width:'+Math.min(100,it.heat)+'%"></i></div>';b.addEventListener("click",()=>{it.selected=!it.selected;render()});return b}
+function render(){const c=$("#counter");c.innerHTML="";items.forEach(it=>c.appendChild(foodButton(it)));if(!items.length)c.innerHTML='<div class="hint">재료를 왼쪽 보관함에서 꺼내보세요.</div>';$("#selectionText").textContent="선택 "+items.filter(x=>x.selected).length+"개";for(const s of ["microwave","pot","pan"]){const arr=stations[s];$("#"+s+"Inside").textContent=arr.length?arr.map(x=>x.def.emoji+" "+x.def.name).join(", "):(s==="pan"?"비어 있음 · 화구 없음":"비어 있음")}$("#kettleInside").textContent=kettle.hot?"뜨거운 물 준비됨":kettle.water?"물 들어 있음":"물 없음";const p=$("#plate");p.innerHTML=plateItems.length?plateItems.map(x=>'<span title="'+x.def.name+'">'+x.def.emoji+'</span>').join(""):"<span>🍽️</span>";$("#score").textContent=lastScore===null?"미평가":lastScore}
 function selected(){return items.filter(x=>x.selected)}
-function clearSelection(){items.forEach(x=>x.selected=false)}
-function moveTo(st){const sel=selected();if(!sel.length){log("먼저 작업대에서 재료를 선택하세요.");return}sel.forEach(x=>{stations[st].push(x);items=items.filter(y=>y!==x)});log(sel.length+"개 재료를 "+(st==="microwave"?"전자레인지":st==="pot"?"냄비":"후라이팬")+"에 넣었어요.");render()}
-function takeFrom(st){if(!stations[st].length){log("꺼낼 재료가 없어요.");return}stations[st].forEach(x=>{x.selected=false;items.push(x)});stations[st]=[];log("재료를 작업대로 꺼냈어요.");render()}
+function invalidateScore(){lastScore=null;$("#result").className="result";$("#result").textContent="음식이 바뀌었어요. 다시 평가해 보세요."}
+function moveTo(st){const sel=selected();if(!sel.length)return log("먼저 작업대에서 재료를 선택하세요.");sel.forEach(x=>{x.selected=false;stations[st].push(x);items=items.filter(y=>y!==x)});invalidateScore();log(sel.length+"개 재료를 "+(st==="microwave"?"전자레인지":st==="pot"?"냄비":"후라이팬")+"에 넣었어요.");render()}
+function takeFrom(st){if(!stations[st].length)return log("꺼낼 재료가 없어요.");stations[st].forEach(x=>{x.selected=false;items.push(x)});stations[st]=[];invalidateScore();log("재료를 작업대로 꺼냈어요.");render()}
 function doAction(act){
  const sel=selected();
- if(act==="plate"){if(!sel.length)return log("접시에 담을 재료를 선택하세요.");sel.forEach(x=>{plateItems.push(x);items=items.filter(y=>y!==x)});log("선택한 재료를 접시에 담았어요.");render();return}
- if(act==="trash"){if(!sel.length)return log("치울 재료를 선택하세요.");items=items.filter(x=>!x.selected);log("선택한 재료를 치웠어요.");render();return}
+ if(act==="plate"){if(!sel.length)return log("접시에 담을 재료를 선택하세요.");sel.forEach(x=>{x.selected=false;plateItems.push(x);items=items.filter(y=>y!==x)});invalidateScore();log("선택한 재료를 접시에 담았어요.");render();return}
+ if(act==="trash"){if(!sel.length)return log("치울 재료를 선택하세요.");items=items.filter(x=>!x.selected);invalidateScore();log("선택한 재료를 치웠어요.");render();return}
  if(!sel.length)return log("먼저 재료를 선택하세요.");
- if(act==="cut"){sel.forEach(x=>{if(["liquid","sauce","mix","icecream","season"].includes(x.def.type))return;x.cut=true});score+=2;log("선택한 재료를 손질했어요.")}
- if(act==="mix"){if(sel.length<2)return log("섞으려면 2개 이상 선택하세요.");sel.forEach(x=>x.mixed=true);score+=3;log("선택한 재료를 함께 섞었어요.")}
- if(act==="sauce"){const hasSauce=sel.some(x=>x.def.type==="sauce");if(!hasSauce)return log("선택한 것 중 소스가 필요해요.");sel.forEach(x=>x.mixed=true);score+=2;log("소스를 골고루 섞었어요.")}
- clearSelection();render()
+ if(act==="cut"){let changed=0;sel.forEach(x=>{if(!["liquid","sauce","mix","icecream","season"].includes(x.def.type)&&!x.cut){x.cut=true;changed++}});log(changed?changed+"개 재료를 손질했어요.":"이미 손질했거나 자를 수 없는 재료예요.");invalidateScore();clearSelection();render();return}
+ if(act==="mix"){
+   if(sel.length<2)return log("섞으려면 2개 이상 선택하세요.");
+   const parts=[...sel];const avgHeat=parts.reduce((a,x)=>a+x.heat,0)/parts.length;
+   const mix={uid:uid++,def:{name:mixName(parts),emoji:mixEmoji(parts)||"🥣",type:"mixture"},cut:false,heat:avgHeat,hotWater:parts.some(x=>x.hotWater),selected:false,isMixture:true,components:parts};
+   items=items.filter(x=>!x.selected);items.push(mix);invalidateScore();log(parts.length+"개 재료를 하나의 혼합물로 섞었어요.");render();return
+ }
 }
-function heatMicrowave(sec){
- if(!stations.microwave.length){log("전자레인지가 비어 있어요.");return}
- stations.microwave.forEach(x=>{
-  let gain=sec/2;
-  if(x.def.type==="icecream")gain=sec*1.2;
-  x.heat+=gain;
- });
- score+=Math.min(6,Math.round(sec/20));
- log("전자레인지로 "+sec+"초 가열했어요.");
- $("#heatModal").classList.remove("show");render()
-}
+function clearSelection(){items.forEach(x=>x.selected=false)}
+function heatMicrowave(sec){if(!stations.microwave.length)return log("전자레인지가 비어 있어요.");stations.microwave.forEach(x=>{let gain=sec/2;if(baseComponents(x).some(c=>c.def.type==="icecream"))gain=sec*1.2;x.heat+=gain;baseComponents(x).forEach(c=>c.heat=Math.max(c.heat,x.heat))});invalidateScore();log("전자레인지로 "+sec+"초 가열했어요.");$("#heatModal").classList.remove("show");render()}
 function judge(){
  if(!plateItems.length){$("#result").className="result bad";$("#result").textContent="접시가 비어 있어요! 먼저 음식을 담아주세요.";return}
- let pts=0,notes=[];
- const names=new Set(plateItems.map(x=>x.def.name));
- const types=new Set(plateItems.map(x=>x.def.type));
- const over=plateItems.filter(x=>x.heat>=80).length;
- const rawMeat=plateItems.filter(x=>x.def.type==="meat"&&x.heat<45).length;
- if(plateItems.length>=3){pts+=15;notes.push("여러 재료를 조합했어요.")}
- if(plateItems.some(x=>x.cut)){pts+=10;notes.push("손질한 재료가 있어요.")}
- if(plateItems.some(x=>x.mixed)){pts+=10;notes.push("재료 조합이 잘 되어 있어요.")}
- if(names.has("난")&&types.has("cheese")&&(types.has("sauce"))){pts+=35;notes.push("난 피자 계열 조합이 완성됐어요!")}
- if(names.has("스파게티 면")&&types.has("sauce")){pts+=35;notes.push("파스타 계열 조합이 완성됐어요!")}
- if(names.has("브라우니 믹스")&&names.has("물")&&plateItems.some(x=>x.def.name==="브라우니 믹스"&&x.heat>=45)){pts+=35;notes.push("브라우니 계열 조합을 만들었어요!")}
- if(names.has("투게더 아이스크림")&&(names.has("사과")||names.has("브라우니 믹스"))){pts+=20;notes.push("디저트 조합이 좋아요.")}
- if(types.has("veg")&&types.has("meat")){pts+=15;notes.push("고기와 채소를 함께 사용했어요.")}
- if(over){pts-=over*12;notes.push("과조리된 재료가 있어요.")}
+ const base=allBase(plateItems),names=new Set(base.map(x=>x.def.name)),types=new Set(base.map(x=>x.def.type));
+ let pts=10,notes=[];
+ const uniqueNames=new Set(base.map(x=>x.def.name)).size;
+ pts+=Math.min(20,Math.max(0,(uniqueNames-1)*4));
+ if(base.some(x=>x.cut)){pts+=8;notes.push("재료 손질이 반영됐어요.")}
+ if(plateItems.some(x=>x.isMixture)){pts+=12;notes.push("실제로 섞은 혼합물이 있어요.")}
+ const properlyHeated=base.filter(x=>["meat","pasta","mix","cheese","veg"].includes(x.def.type)&&x.heat>=15&&x.heat<80).length;
+ pts+=Math.min(15,properlyHeated*3);
+ if(names.has("난")&&types.has("cheese")&&types.has("sauce")){pts+=25;notes.push("난 피자 계열 조합!")}
+ if(names.has("스파게티 면")&&types.has("sauce")){pts+=25;notes.push("파스타 계열 조합!")}
+ if(names.has("브라우니 믹스")&&names.has("물")&&base.find(x=>x.def.name==="브라우니 믹스")?.heat>=45){pts+=25;notes.push("브라우니 계열 조합!")}
+ if(names.has("투게더 아이스크림")&&(names.has("사과")||names.has("브라우니 믹스"))){pts+=15;notes.push("디저트 조합이 좋아요.")}
+ if(types.has("veg")&&types.has("meat")){pts+=10;notes.push("고기와 채소를 함께 사용했어요.")}
+ const over=base.filter(x=>x.heat>=80).length,rawMeat=base.filter(x=>x.def.type==="meat"&&x.heat<45).length;
+ if(over){pts-=over*10;notes.push("과조리된 재료가 있어요.")}
  if(rawMeat){pts-=rawMeat*25;notes.push("고기 재료가 충분히 가열되지 않았어요.")}
- pts=Math.max(0,Math.min(100,pts+score));
- score=pts;render();
- const r=$("#result");r.className="result "+(pts>=75?"good":pts>=45?"warn":"bad");
- r.innerHTML="<b>"+pts+"점</b><br>"+(notes.length?notes.join(" "):"조합을 조금 더 발전시켜 보세요.");
- log("완성 평가: "+pts+"점");
+ pts=Math.max(0,Math.min(100,Math.round(pts)));lastScore=pts;render();
+ const r=$("#result");r.className="result "+(pts>=75?"good":pts>=45?"warn":"bad");r.innerHTML="<b>"+pts+" / 100점</b><br>"+(notes.length?notes.join(" "):"조합을 조금 더 발전시켜 보세요.");log("완성 평가: "+pts+"점")
 }
-function resetAll(){items=[];plateItems=[];stations={microwave:[],pot:[],pan:[]};kettle={water:false,hot:false};score=0;uid=1;$("#result").className="result";$("#result").textContent="아직 완성 전이에요.";$("#log").innerHTML="";log("새 요리를 시작했어요.");render()}
-renderInventory();render();log("주방이 준비됐어요. 자유롭게 요리해 보세요!");
-
-$$("[data-act]").forEach(b=>b.addEventListener("click",()=>doAction(b.dataset.act)));
-$$("[data-put]").forEach(b=>b.addEventListener("click",()=>moveTo(b.dataset.put)));
-$$("[data-take]").forEach(b=>b.addEventListener("click",()=>takeFrom(b.dataset.take)));
-$("[data-heat='microwave']").addEventListener("click",()=>$("#heatModal").classList.add("show"));
-$$(".heatTime").forEach(b=>b.addEventListener("click",()=>heatMicrowave(+b.dataset.sec)));
-$("#closeHeat").addEventListener("click",()=>$("#heatModal").classList.remove("show"));
-$("#fillKettle").addEventListener("click",()=>{kettle.water=true;kettle.hot=false;log("커피포트에 물을 넣었어요.");render()});
-$("#boilKettle").addEventListener("click",()=>{if(!kettle.water)return log("먼저 커피포트에 물을 넣으세요.");kettle.hot=true;score+=3;log("물이 끓었어요!");render()});
-$("#pourKettle").addEventListener("click",()=>{if(!kettle.hot)return log("뜨거운 물이 준비되지 않았어요.");const d=defs.find(x=>x.name==="물");const w=createItem(d);w.hotWater=true;w.heat=55;items.push(w);kettle={water:false,hot:false};log("뜨거운 물을 작업대에 준비했어요.");render()});
-$("#judgeBtn").addEventListener("click",judge);
-$("#resetBtn").addEventListener("click",()=>{if(confirm("현재 요리를 버리고 새로 시작할까요?"))resetAll()});
-$("#helpBtn").addEventListener("click",()=>$("#helpModal").classList.add("show"));
-$("#closeHelp").addEventListener("click",()=>$("#helpModal").classList.remove("show"));
+function resetAll(){items=[];plateItems=[];stations={microwave:[],pot:[],pan:[]};kettle={water:false,hot:false};uid=1;lastScore=null;$("#result").className="result";$("#result").textContent="평가 전이에요. 버튼을 여러 번 눌러도 점수는 올라가지 않습니다.";$("#log").innerHTML="";log("새 요리를 시작했어요.");render()}
+renderInventory();render();log("주방이 준비됐어요. 설명서를 눌러 플레이 방법을 볼 수 있어요.");
+$$("[data-act]").forEach(b=>b.addEventListener("click",()=>doAction(b.dataset.act)));$$("[data-put]").forEach(b=>b.addEventListener("click",()=>moveTo(b.dataset.put)));$$("[data-take]").forEach(b=>b.addEventListener("click",()=>takeFrom(b.dataset.take)));$("[data-heat='microwave']").addEventListener("click",()=>$("#heatModal").classList.add("show"));$$(".heatTime").forEach(b=>b.addEventListener("click",()=>heatMicrowave(+b.dataset.sec)));$("#closeHeat").addEventListener("click",()=>$("#heatModal").classList.remove("show"));
+$("#fillKettle").addEventListener("click",()=>{kettle.water=true;kettle.hot=false;invalidateScore();log("커피포트에 물을 넣었어요.");render()});$("#boilKettle").addEventListener("click",()=>{if(!kettle.water)return log("먼저 커피포트에 물을 넣으세요.");kettle.hot=true;invalidateScore();log("물이 끓었어요!");render()});$("#pourKettle").addEventListener("click",()=>{if(!kettle.hot)return log("뜨거운 물이 준비되지 않았어요.");const d=defs.find(x=>x.name==="물"),w=createItem(d);w.hotWater=true;w.heat=55;items.push(w);kettle={water:false,hot:false};invalidateScore();log("뜨거운 물을 작업대에 준비했어요.");render()});
+$("#judgeBtn").addEventListener("click",judge);$("#resetBtn").addEventListener("click",()=>{if(confirm("현재 요리를 버리고 새로 시작할까요?"))resetAll()});$("#helpBtn").addEventListener("click",()=>$("#helpModal").classList.add("show"));$("#closeHelp").addEventListener("click",()=>$("#helpModal").classList.remove("show"));
 </script>
 </body></html>
