@@ -31,7 +31,7 @@ button{font:inherit;cursor:pointer}button:disabled{opacity:.45;cursor:not-allowe
 <body>
 <header class="header">
 <a class="logo" href="https://semicolonxss.github.io/Formwheel/"><span class="mark">;</span>Formwheel Cook</a>
-<div class="topBtns"><button class="topBtn" id="helpBtn">📖 설명서</button><button class="topBtn" id="resetBtn">새 요리</button></div>
+<div class="topBtns"><button class="topBtn" id="helpBtn">📖 설명서</button><button class="topBtn" id="undoBtn">↶ 되돌리기</button><button class="topBtn" id="resetBtn">새 요리</button></div>
 </header>
 <main class="wrap">
 <div class="hero"><div><h1>🍳 자유 요리 시뮬레이터</h1><p>재료를 꺼내고 손질·혼합·가열해서 원하는 음식을 직접 만들어 보세요.</p></div><div class="score">⭐ 점수 <span id="score">미평가</span> / 100</div></div>
@@ -207,6 +207,10 @@ function judge(){
 
  let pts=best.score===-999?18:best.score;
  const notes=[];
+ const closest=recipes.map(r=>({r,missing:[...r.required.filter(n=>!nameSet.has(n)),...r.oneOf.filter(group=>!group.some(n=>nameSet.has(n))).map(group=>group.join(" 또는 "))]})).sort((a,b)=>a.missing.length-b.missing.length)[0];
+ if(closest?.missing.length)notes.push(closest.r.name+"에 부족한 재료: "+closest.missing.join(", ")+". 다음 행동: 부족 재료를 준비해 주세요.");
+ if(base.some(x=>x.def.type==="meat"&&x.heat<45))notes.push("다음 행동: 고기를 더 가열해 주세요.");
+ if(base.some(x=>x.heat>=80))notes.push("다음 행동: 과조리 재료를 교체하고 가열 시간을 줄여 주세요.");
  if(best.score===-999){
    notes.push("정해진 대표 조합과는 거리가 있어 자유 요리 기준으로 평가했어요.");
  }else{
@@ -269,6 +273,20 @@ function judge(){
  log("완성 평가: "+pts+"점");
 }
 function resetAll(){items=[];plateItems=[];stations={microwave:[],pot:[],pan:[]};kettle={water:false,hot:false};uid=1;lastScore=null;lastJudgedSignature=null;lastJudgedHtml="";$("#result").className="result";$("#result").textContent="평가 전이에요. 버튼을 여러 번 눌러도 점수는 올라가지 않습니다.";$("#log").innerHTML="";log("새 요리를 시작했어요.");render()}
+const COOK_SAVE="formwheel_cook_v1",undoHistory=[];
+function kitchenSnapshot(){return JSON.stringify({items,plateItems,stations,kettle,uid,lastScore,lastJudgedSignature,lastJudgedHtml});}
+function restoreKitchen(raw){const d=JSON.parse(raw);if(!Array.isArray(d.items)||!Array.isArray(d.plateItems)||!d.stations||!d.kettle||!Number.isInteger(d.uid))throw Error("저장 형식 오류");
+ items=d.items;plateItems=d.plateItems;stations=d.stations;kettle=d.kettle;uid=d.uid;lastScore=d.lastScore;lastJudgedSignature=d.lastJudgedSignature;lastJudgedHtml=d.lastJudgedHtml||"";render();
+ if(lastJudgedHtml)$("#result").innerHTML=lastJudgedHtml;else invalidateScore();}
+function saveKitchen(){try{localStorage.setItem(COOK_SAVE,kitchenSnapshot());}catch{log("저장 공간에 접근할 수 없어 이번 요리는 저장되지 않습니다.");}}
+try{const saved=localStorage.getItem(COOK_SAVE);if(saved)restoreKitchen(saved);}catch{log("저장된 요리를 복구하지 못했습니다. 새 요리를 시작합니다.");}
+document.addEventListener("click",event=>{
+ const button=event.target.closest("button");if(!button||button.id==="undoBtn")return;
+ if(!button.matches(".ing,[data-act],[data-put],[data-take],.heatTime,#fillKettle,#boilKettle,#pourKettle,#resetBtn"))return;
+ const before=kitchenSnapshot();queueMicrotask(()=>{if(kitchenSnapshot()!==before){undoHistory.push(before);if(undoHistory.length>30)undoHistory.shift();saveKitchen();}});
+},true);
+$("#undoBtn").onclick=()=>{const previous=undoHistory.pop();if(!previous)return log("되돌릴 작업이 없습니다.");restoreKitchen(previous);saveKitchen();log("이전 작업을 되돌렸어요.");};
+addEventListener("beforeunload",saveKitchen);
 renderInventory();render();log("주방이 준비됐어요. 설명서를 눌러 플레이 방법을 볼 수 있어요.");
 $$("[data-act]").forEach(b=>b.addEventListener("click",()=>doAction(b.dataset.act)));$$("[data-put]").forEach(b=>b.addEventListener("click",()=>moveTo(b.dataset.put)));$$("[data-take]").forEach(b=>b.addEventListener("click",()=>takeFrom(b.dataset.take)));$("[data-heat='microwave']").addEventListener("click",()=>$("#heatModal").classList.add("show"));$$(".heatTime").forEach(b=>b.addEventListener("click",()=>heatMicrowave(+b.dataset.sec)));$("#closeHeat").addEventListener("click",()=>$("#heatModal").classList.remove("show"));
 $("#fillKettle").addEventListener("click",()=>{kettle.water=true;kettle.hot=false;invalidateScore();log("커피포트에 물을 넣었어요.");render()});$("#boilKettle").addEventListener("click",()=>{if(!kettle.water)return log("먼저 커피포트에 물을 넣으세요.");kettle.hot=true;invalidateScore();log("물이 끓었어요!");render()});$("#pourKettle").addEventListener("click",()=>{if(!kettle.hot)return log("뜨거운 물이 준비되지 않았어요.");const d=defs.find(x=>x.name==="물"),w=createItem(d);w.hotWater=true;w.heat=55;items.push(w);kettle={water:false,hot:false};invalidateScore();log("뜨거운 물을 작업대에 준비했어요.");render()});
