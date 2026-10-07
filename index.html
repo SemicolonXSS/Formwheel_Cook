@@ -285,8 +285,11 @@ try{const saved=localStorage.getItem(COOK_SAVE);if(saved)restoreKitchen(saved);}
 document.addEventListener("click",event=>{
  const button=event.target.closest("button");if(!button||button.id==="undoBtn")return;
  if(!button.matches(".ing,[data-act],[data-put],[data-take],.heatTime,#fillKettle,#boilKettle,#pourKettle,#resetBtn"))return;
- const before=kitchenSnapshot();queueMicrotask(()=>{if(kitchenSnapshot()!==before){undoHistory.push(before);if(undoHistory.length>30)undoHistory.shift();saveKitchen();}});
+ event.kitchenBefore=kitchenSnapshot();
 },true);
+document.addEventListener("click",event=>{
+ const before=event.kitchenBefore;if(before&&kitchenSnapshot()!==before){undoHistory.push(before);if(undoHistory.length>30)undoHistory.shift();saveKitchen();}
+});
 $("#undoBtn").onclick=()=>{const previous=undoHistory.pop();if(!previous)return log("되돌릴 작업이 없습니다.");restoreKitchen(previous);saveKitchen();log("이전 작업을 되돌렸어요.");};
 addEventListener("beforeunload",saveKitchen);
 renderInventory();render();log("주방이 준비됐어요. 설명서를 눌러 플레이 방법을 볼 수 있어요.");
