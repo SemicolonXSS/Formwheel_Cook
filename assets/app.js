@@ -32,14 +32,14 @@ const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 function baseComponents(it){return it.components?it.components.flatMap(c=>baseComponents(c)):[it]}
 function allBase(list){return list.flatMap(x=>baseComponents(x))}
 function log(msg){const d=document.createElement("div");d.className="logLine";d.textContent=msg;$("#log").prepend(d)}
-function stateText(it){const a=[];if(it.isMixture)a.push("혼합물");if(it.cut)a.push("잘림");if(it.heat>=80)a.push("과조리");else if(it.heat>=45)a.push("익음");else if(it.heat>=15)a.push("데워짐");else a.push("차가움/생");if(it.hotWater)a.push("뜨거운 물");return a.join(" · ")}
+function stateText(it){const a=[];if(it.isMixture)a.push("혼합물");if(it.cut)a.push("잘림");if(it.heat>=80)a.push("과조리");else if(it.heat>=45)a.push("익음");else if(it.heat>=15)a.push("데워짐");else a.push("차가움/생");if(it.method)a.push(it.method==="boil"?"삶음/끓임":it.method==="fry"?"볶음":"구움");if(it.burnt)a.push("탐");if(it.hotWater)a.push("뜨거운 물");return a.join(" · ")}
 function createItem(def){return {uid:uid++,def,cut:false,heat:0,hotWater:false,selected:false,isMixture:false,components:null}}
 function mixName(parts){const names=parts.flatMap(x=>baseComponents(x).map(c=>c.def.name));const uniq=[...new Set(names)];return uniq.slice(0,4).join(" + ")+(uniq.length>4?" 외 "+(uniq.length-4)+"개":"")+" 혼합물"}
 function mixEmoji(parts){const es=[...new Set(parts.flatMap(x=>baseComponents(x).map(c=>c.def.emoji)))];return es.slice(0,3).join("")}
 const typeLabels={liquid:"물 음료",pasta:"면",fruit:"과일",veg:"채소 야채",season:"조미료 양념",sauce:"소스",bread:"빵",meat:"고기 육류",cheese:"치즈 유제품",mix:"믹스",icecream:"아이스크림 디저트",egg:"달걀 계란",fat:"버터 유지",seafood:"해산물",ready:"즉석 식품",sweet:"단맛 디저트"};
 function renderInventory(){const q=$("#ingredientSearch").value.trim().toLowerCase().replace(/\s/g,"");const found=defs.filter(d=>(d.name+" "+(typeLabels[d.type]||"")).toLowerCase().replace(/\s/g,"").includes(q));$("#inventory").innerHTML="";$("#ingredientCount").textContent=found.length+" / "+defs.length+"개 재료";found.forEach(d=>{const b=document.createElement("button");b.className="ing";b.innerHTML='<span class="emoji">'+d.emoji+'</span><span class="ingName">'+d.name+'</span>';b.addEventListener("click",()=>{items.push(createItem(d));invalidateScore();log(d.name+"을(를) 작업대에 꺼냈어요.");render()});$("#inventory").appendChild(b)});if(!found.length)$("#inventory").textContent="검색 결과가 없어요. 다른 이름이나 종류를 입력해 보세요."}
 function foodButton(it){const b=document.createElement("button");b.className="food"+(it.selected?" selected":"");const comp=it.isMixture?'<div class="components">'+baseComponents(it).map(x=>x.def.name).join(", ")+'</div>':"";b.innerHTML='<div class="name">'+it.def.emoji+" "+it.def.name+'</div><div class="state">'+stateText(it)+'</div>'+comp+'<div class="heat"><i style="width:'+Math.min(100,it.heat)+'%"></i></div>';b.addEventListener("click",()=>{it.selected=!it.selected;render()});return b}
-function render(){const c=$("#counter");c.innerHTML="";items.forEach(it=>c.appendChild(foodButton(it)));if(!items.length)c.innerHTML='<div class="hint">재료를 왼쪽 보관함에서 꺼내보세요.</div>';$("#selectionText").textContent="선택 "+items.filter(x=>x.selected).length+"개";for(const s of ["microwave","pot","pan"]){const arr=stations[s];$("#"+s+"Inside").textContent=arr.length?arr.map(x=>x.def.emoji+" "+x.def.name).join(", "):(s==="pan"?"비어 있음 · 화구 없음":"비어 있음")}$("#kettleInside").textContent=kettle.hot?"뜨거운 물 준비됨":kettle.water?"물 들어 있음":"물 없음";const p=$("#plate");p.innerHTML=plateItems.length?plateItems.map(x=>'<span title="'+x.def.name+'">'+x.def.emoji+'</span>').join(""):"<span>🍽️</span>";$("#score").textContent=lastScore===null?"미평가":lastScore}
+function render(){const c=$("#counter");c.innerHTML="";items.forEach(it=>c.appendChild(foodButton(it)));if(!items.length)c.innerHTML='<div class="hint">재료를 왼쪽 보관함에서 꺼내보세요.</div>';$("#selectionText").textContent="선택 "+items.filter(x=>x.selected).length+"개";for(const s of ["microwave","pot","pan"]){const arr=stations[s];$("#"+s+"Inside").textContent=arr.length?arr.map(x=>x.def.emoji+" "+x.def.name+" ("+stateText(x)+")").join(", "):"비어 있음"}$("#kettleInside").textContent=kettle.hot?"뜨거운 물 준비됨":kettle.water?"물 들어 있음":"물 없음";const p=$("#plate");p.innerHTML=plateItems.length?plateItems.map(x=>'<span title="'+x.def.name+'">'+x.def.emoji+'</span>').join(""):"<span>🍽️</span>";$("#score").textContent=lastScore===null?"미평가":lastScore}
 function selected(){return items.filter(x=>x.selected)}
 function invalidateScore(){lastScore=null;lastJudgedSignature=null;lastJudgedHtml="";$("#result").className="result";$("#result").textContent="음식이 바뀌었어요. 다시 평가해 보세요."}
 function moveTo(st){const sel=selected();if(!sel.length)return log("먼저 작업대에서 재료를 선택하세요.");sel.forEach(x=>{x.selected=false;stations[st].push(x);items=items.filter(y=>y!==x)});invalidateScore();log(sel.length+"개 재료를 "+(st==="microwave"?"전자레인지":st==="pot"?"냄비":"후라이팬")+"에 넣었어요.");render()}
@@ -59,9 +59,27 @@ function doAction(act){
 }
 function clearSelection(){items.forEach(x=>x.selected=false)}
 function heatMicrowave(sec){if(!stations.microwave.length)return log("전자레인지가 비어 있어요.");stations.microwave.forEach(x=>{let gain=sec/2;if(baseComponents(x).some(c=>c.def.type==="icecream"))gain=sec*1.2;x.heat+=gain;baseComponents(x).forEach(c=>c.heat=Math.max(c.heat,x.heat))});invalidateScore();log("전자레인지로 "+sec+"초 가열했어요.");$("#heatModal").classList.remove("show");render()}
+// Cooking progress belongs to each ingredient, including ingredients inside mixtures.
+function cookStation(st,mode,sec){
+ const batch=stations[st];if(!batch.length)return log("먼저 "+(st==="pot"?"냄비":"후라이팬")+"에 재료를 넣으세요.");
+ const base=allBase(batch);
+ if(st==="pot"&&!base.some(x=>x.def.name==="물"))return log("냄비에는 물이 필요해요. 물 또는 커피포트의 뜨거운 물을 넣으세요.");
+ if(st==="pan"&&base.some(x=>x.def.name==="물"))return log("물이 들어 있는 음식은 냄비에서 끓여 주세요.");
+ const gain=sec*(st==="pot"?0.5:mode==="fry"?0.6:0.75);
+ for(const x of base){x.heat+=gain;x.method=mode;if(st==="pan"){x.panExposure=(x.panExposure||0)+sec;if(x.panExposure>60)x.burnt=true;} }
+ for(const x of batch){if(x.isMixture){x.heat=baseComponents(x).reduce((a,c)=>a+c.heat,0)/baseComponents(x).length;x.method=mode;x.burnt=baseComponents(x).some(c=>c.burnt);}}
+ invalidateScore();log((st==="pot"?"냄비에서 끓이기":mode==="fry"?"후라이팬에서 볶기":"후라이팬에서 굽기")+" "+sec+"초 완료. "+(st==="pan"?"뒤집기/젓기로 한쪽이 타는 것을 막으세요.":"물을 빼면 삶은 재료만 꺼낼 수 있어요."));render();
+}
+function stirPan(){if(!stations.pan.length)return log("후라이팬이 비어 있어요.");allBase(stations.pan).forEach(x=>x.panExposure=0);invalidateScore();log("팬의 재료를 뒤집고 저었어요. 이미 탄 음식은 되돌아오지 않아요.");render();}
+function drainPot(){
+ if(!stations.pot.length)return log("냄비가 비어 있어요.");
+ function removeWater(x){if(x.isMixture){x.components=x.components.map(removeWater).filter(Boolean);if(!x.components.length)return null;x.def={...x.def,name:mixName(x.components),emoji:mixEmoji(x.components)};x.heat=x.components.reduce((a,c)=>a+c.heat,0)/x.components.length;return x;}return x.def.name==="물"?null:x;}
+ const before=allBase(stations.pot).filter(x=>x.def.name==="물").length;
+ if(!before)return log("뺄 물이 없어요.");stations.pot=stations.pot.map(removeWater).filter(Boolean);invalidateScore();log("냄비의 물을 빼고 삶은 재료를 남겼어요.");render();
+}
 function dishSignature(){
  const base=allBase(plateItems).map(x=>({
-   n:x.def.name,t:x.def.type,c:!!x.cut,h:Math.round(x.heat),w:!!x.hotWater
+   n:x.def.name,t:x.def.type,c:!!x.cut,h:Math.round(x.heat),w:!!x.hotWater,m:x.method||"",b:!!x.burnt
  })).sort((a,b)=>(a.n+a.h).localeCompare(b.n+b.h));
  const top=plateItems.map(x=>({
    mix:!!x.isMixture,n:x.def.name,h:Math.round(x.heat),
@@ -209,6 +227,12 @@ function judge(){
  const duplicateExcess=Object.values(countByName).reduce((a,n)=>a+Math.max(0,n-2),0);
  if(duplicateExcess){pts-=duplicateExcess*5;notes.push("같은 재료를 너무 많이 넣었어요.");}
 
+ const properMethod=base.filter(x=>x.heat>=45&&x.heat<80&&!x.burnt&&((x.def.type==="pasta"&&x.method==="boil")||(["meat","egg","seafood","veg","ready"].includes(x.def.type)&&["fry","grill"].includes(x.method))));
+ if(properMethod.length){pts+=Math.min(6,properMethod.length*2);notes.push("재료에 어울리는 도구로 조리했어요.");}
+ const unboiledPasta=base.filter(x=>x.def.type==="pasta"&&x.method!=="boil").length;
+ if(unboiledPasta){pts-=unboiledPasta*12;notes.push("면은 물과 함께 냄비에서 삶아 보세요.");}
+ const burnt=base.filter(x=>x.burnt).length;
+ if(burnt){pts-=burnt*15;notes.push("팬에서 탄 재료가 있어요. 가열 사이에 뒤집거나 저어 주세요.");}
  const over=base.filter(x=>x.heat>=80).length;
  const rawMeat=base.filter(x=>["meat","egg","seafood"].includes(x.def.type)&&x.heat<45).length;
  if(over){pts-=over*10;notes.push("과조리된 재료가 있어요.");}
@@ -217,7 +241,7 @@ function judge(){
  // 100점은 대표 조합 + 적절한 재료 수 + 안전한 가열이어야만 가능.
  if(best.score===-999) pts=Math.min(69,pts);
  if(unique.length>8) pts=Math.min(84,pts);
- if(rawMeat||over>=2) pts=Math.min(74,pts);
+ if(rawMeat||burnt||over>=2) pts=Math.min(74,pts);
 
  pts=Math.max(0,Math.min(100,Math.round(pts)));
  lastScore=pts;
@@ -242,7 +266,7 @@ function saveKitchen(){try{localStorage.setItem(COOK_SAVE,kitchenSnapshot());}ca
 try{const saved=localStorage.getItem(COOK_SAVE);if(saved)restoreKitchen(saved);}catch{log("저장된 요리를 복구하지 못했습니다. 새 요리를 시작합니다.");}
 document.addEventListener("click",event=>{
  const button=event.target.closest("button");if(!button||button.id==="undoBtn")return;
- if(!button.matches(".ing,[data-act],[data-put],[data-take],.heatTime,#fillKettle,#boilKettle,#pourKettle,#resetBtn"))return;
+ if(!button.matches(".ing,[data-act],[data-put],[data-take],.heatTime,[data-cook],#stirPan,#drainPot,#fillKettle,#boilKettle,#pourKettle,#resetBtn"))return;
  event.kitchenBefore=kitchenSnapshot();
 },true);
 document.addEventListener("click",event=>{
@@ -255,7 +279,7 @@ const tutorialSteps=[
 ["1 / 6 · 재료 찾기","검색창에 ‘달걀’ 또는 ‘채소’를 입력해 보세요. 재료를 누르면 작업대에 꺼낼 수 있어요.","#ingredientSearch"],
 ["2 / 6 · 선택과 손질","작업대 재료를 눌러 선택하세요. 여러 개도 선택할 수 있어요. 채소를 선택하고 자르기를 눌러 보세요.","#counter"],
 ["3 / 6 · 섞기","재료 2개 이상을 선택한 뒤 섞기를 누르면 하나의 혼합물이 돼요. 섞은 뒤에는 혼합물을 다시 선택하세요.","[data-act='mix']"],
-["4 / 6 · 가열","선택 재료를 전자레인지에 넣고 가열 시간을 고른 뒤 꺼내세요. 20초는 열 +10, 1분은 +30이에요. 고기·달걀·새우는 열 45 이상, 80 미만을 목표로 하세요. 이 수치는 게임 규칙이에요.",".station"],
+["4 / 6 · 가열","전자레인지로 데우거나, 냄비에 물과 재료를 넣어 삶고, 후라이팬으로 볶고 구워 보세요. 팬은 가열 사이에 뒤집기/젓기를 눌러야 타지 않아요. 20초는 열 +10, 1분은 +30이에요. 고기·달걀·새우는 열 45 이상, 80 미만을 목표로 하세요. 이 수치는 게임 규칙이에요.",".station"],
 ["5 / 6 · 담기와 평가","작업대의 완성 음식을 선택해 접시에 담고 평가하세요. 같은 접시를 다시 평가해도 점수는 그대로예요.","#judgeBtn"],
 ["6 / 6 · 자유롭게 도전","예시: 밥 + 달걀 + 당근을 준비 → 당근 손질 → 모두 섞기 → 전자레인지 1분과 40초 가열 → 꺼내기 → 선택 → 접시에 담기 → 평가! 되돌리기로 실수를 고칠 수 있어요. 튜토리얼은 언제든 다시 열 수 있어요.","#undoBtn"]
 ];
@@ -271,3 +295,6 @@ renderInventory();render();log("주방이 준비됐어요. 설명서를 눌러 �
 $$("[data-act]").forEach(b=>b.addEventListener("click",()=>doAction(b.dataset.act)));$$("[data-put]").forEach(b=>b.addEventListener("click",()=>moveTo(b.dataset.put)));$$("[data-take]").forEach(b=>b.addEventListener("click",()=>takeFrom(b.dataset.take)));$("[data-heat='microwave']").addEventListener("click",()=>$("#heatModal").classList.add("show"));$$(".heatTime").forEach(b=>b.addEventListener("click",()=>heatMicrowave(+b.dataset.sec)));$("#closeHeat").addEventListener("click",()=>$("#heatModal").classList.remove("show"));
 $("#fillKettle").addEventListener("click",()=>{kettle.water=true;kettle.hot=false;invalidateScore();log("커피포트에 물을 넣었어요.");render()});$("#boilKettle").addEventListener("click",()=>{if(!kettle.water)return log("먼저 커피포트에 물을 넣으세요.");kettle.hot=true;invalidateScore();log("물이 끓었어요!");render()});$("#pourKettle").addEventListener("click",()=>{if(!kettle.hot)return log("뜨거운 물이 준비되지 않았어요.");const d=defs.find(x=>x.name==="물"),w=createItem(d);w.hotWater=true;w.heat=55;items.push(w);kettle={water:false,hot:false};invalidateScore();log("뜨거운 물을 작업대에 준비했어요.");render()});
 $("#judgeBtn").addEventListener("click",judge);$("#resetBtn").addEventListener("click",()=>{if(confirm("현재 요리를 버리고 새로 시작할까요?"))resetAll()});$("#helpBtn").addEventListener("click",()=>$("#helpModal").classList.add("show"));$("#closeHelp").addEventListener("click",()=>$("#helpModal").classList.remove("show"));
+
+
+$$("[data-cook]").forEach(b=>b.addEventListener("click",()=>cookStation(b.dataset.cook,b.dataset.mode,+b.dataset.sec)));$("#stirPan").addEventListener("click",stirPan);$("#drainPot").addEventListener("click",drainPot);

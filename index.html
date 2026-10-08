@@ -31,8 +31,8 @@
 <div class="stationGrid">
 <div class="station"><h3>📻 전자레인지</h3><div class="inside" id="microwaveInside">비어 있음</div><div class="stationBtns"><button class="mini" data-put="microwave">선택 재료 넣기</button><button class="mini go" data-heat="microwave">가열</button><button class="mini" data-take="microwave">꺼내기</button></div></div>
 <div class="station"><h3>☕ 커피포트</h3><div class="inside" id="kettleInside">물 없음</div><div class="stationBtns"><button class="mini" id="fillKettle">물 넣기</button><button class="mini go" id="boilKettle">끓이기</button><button class="mini" id="pourKettle">뜨거운 물 꺼내기</button></div></div>
-<div class="station"><h3>🍲 냄비</h3><div class="inside" id="potInside">비어 있음</div><div class="stationBtns"><button class="mini" data-put="pot">선택 재료 넣기</button><button class="mini" data-take="pot">꺼내기</button></div></div>
-<div class="station"><h3>🍳 후라이팬</h3><div class="inside" id="panInside">비어 있음 · 화구 없음</div><div class="stationBtns"><button class="mini" data-put="pan">선택 재료 넣기</button><button class="mini" data-take="pan">꺼내기</button></div></div>
+<div class="station"><h3>🍲 냄비</h3><p class="sub">물과 함께 삶기·끓이기. 면은 삶은 뒤 물 빼기!</p><div class="inside" id="potInside">비어 있음</div><div class="stationBtns"><button class="mini" data-put="pot">선택 재료 넣기</button><button class="mini go" data-cook="pot" data-mode="boil" data-sec="40">40초 끓이기</button><button class="mini go" data-cook="pot" data-mode="boil" data-sec="60">1분 끓이기</button><button class="mini" id="drainPot">물 빼기</button><button class="mini" data-take="pot">꺼내기</button></div></div>
+<div class="station"><h3>🍳 후라이팬</h3><p class="sub">볶기·굽기. 가열 사이에 뒤집기/젓기로 타는 것을 막으세요.</p><div class="inside" id="panInside">비어 있음</div><div class="stationBtns"><button class="mini" data-put="pan">선택 재료 넣기</button><button class="mini go" data-cook="pan" data-mode="fry" data-sec="40">40초 볶기</button><button class="mini go" data-cook="pan" data-mode="grill" data-sec="40">40초 굽기</button><button class="mini" id="stirPan">뒤집기 / 젓기</button><button class="mini" data-take="pan">꺼내기</button></div></div>
 </div></div></section>
 <aside class="panel"><h2>🍽️ 완성 접시</h2><div class="plate" id="plate"><span>🍽️</span></div><button class="action primary" style="width:100%" id="judgeBtn">완성! 평가하기</button><div id="result" class="result">평가 전이에요. 버튼을 여러 번 눌러도 점수는 올라가지 않습니다.</div><div class="notice">점수는 조작 횟수가 아니라 <b>최종 음식 상태</b>만 보고 계산합니다.</div><h2 style="margin-top:14px">📜 진행 기록</h2><div class="log" id="log"></div></aside>
 </div></main>
@@ -48,7 +48,7 @@
 <div class="manualStep"><b>5. 가열하기</b>재료 또는 혼합물을 선택해 전자레인지에 넣은 뒤 시간을 고르세요. 상태가 차가움/생 → 데워짐 → 익음 → 과조리로 변합니다.</div>
 <div class="manualStep"><b>6. 커피포트</b><b>물 넣기 → 끓이기 → 뜨거운 물 꺼내기</b> 순서입니다. 꺼낸 뜨거운 물은 작업대 재료처럼 사용할 수 있습니다.</div>
 <div class="manualStep"><b>7. 완성하기</b>완성한 음식이나 혼합물을 선택해서 접시에 담은 뒤 <b>완성! 평가하기</b>를 누르세요.</div>
-<h3>⭐ 점수 규칙</h3>
+<div class="manualStep"><b>냄비로 삶기</b>물과 면·채소 등을 냄비에 넣고 끓이세요. 1분은 열 +30, 40초는 +20이에요. 면은 물 빼기 후 꺼내 소스와 섞어 보세요.</div><div class="manualStep"><b>후라이팬으로 볶기·굽기</b>재료를 넣고 40초 볶기(열 +24) 또는 굽기(열 +30)를 선택하세요. 연속 60초를 넘겨 가열하면 타므로 가열 사이에 뒤집기 / 젓기를 누르세요. 뒤집어도 이미 탄 상태나 과조리는 회복되지 않아요. 모든 시간은 게임 규칙이에요.</div><h3>⭐ 점수 규칙</h3>
 <p class="sub">100점 만점이며 행동 횟수는 점수에 들어가지 않습니다. 대표 음식 조합과 얼마나 잘 맞는지, 필요한 재료를 적당히 썼는지, 손질과 가열이 적절한지를 봅니다. 재료를 무작정 많이 넣거나 같은 재료를 반복해서 넣으면 감점됩니다. 같은 완성 접시 상태를 다시 평가하면 저장된 같은 점수를 그대로 보여줍니다.</p>
 <h3>🥣 섞기 예시</h3>
 <p class="sub">토마토 소스 + 양파 + 버섯 → “토마토 소스 + 양파 + 버섯 혼합물”<br>난 + 그 혼합물 + 모짜렐라 → 다시 섞거나 각각 조리해서 난 피자 스타일로 완성할 수 있습니다.</p>
@@ -57,4 +57,5 @@
 
 <script src="./assets/app.js"></script>
 </body></html>
+
 
