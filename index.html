@@ -13,7 +13,7 @@
 <meta property="og:image" content="https://semicolonxss.github.io/Formwheel_Cook/assets/thumbnail.svg">
 <link rel="stylesheet" href="assets/formwheel-brand.css?v=20261008-hub-logo">
 <link rel="icon" type="image/svg+xml" href="https://semicolonxss.github.io/Formwheel/assets/formwheel-favicon.svg">
-</head>
+<script>if(new URLSearchParams(location.search).get("battleEmbed")==="1")document.documentElement.classList.add("battle-embed");</script><style>.battle-embed .topBtns a[href*="battle.html"],.battle-embed nav[aria-label="게임 모드 전환"]{display:none!important}</style></head>
 <body>
 <header class="header">
 <a class="logo fw-hub-logo" href="https://semicolonxss.github.io/Formwheel/" aria-label="FormWheel 메인으로 이동"><span class="fw-hub-form">Form</span><span class="fw-hub-icon" aria-hidden="true"></span><span class="fw-hub-wheel">Wheel</span></a>
@@ -57,11 +57,6 @@
 </div></div>
 
 <script src="./assets/app.js"></script>
-<script>
-if(new URLSearchParams(location.search).get("battleEmbed")==="1"){
-  document.querySelectorAll('#fw-battle-entry, a[href="./battle.html"], a[href="battle.html"]').forEach(el=>el.style.display="none");
-}
-</script>
 </body></html>
 
 
