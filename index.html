@@ -57,6 +57,11 @@
 </div></div>
 
 <script src="./assets/app.js"></script>
+<script>
+if(new URLSearchParams(location.search).get("battleEmbed")==="1"){
+  document.querySelectorAll('#fw-battle-entry, a[href="./battle.html"], a[href="battle.html"]').forEach(el=>el.style.display="none");
+}
+</script>
 </body></html>
 
 
