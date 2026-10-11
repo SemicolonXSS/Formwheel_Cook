@@ -5,31 +5,33 @@
 <section class="panel hidden" id="room"><div class="row"><strong>방 코드: <span id="roomCode"></span></strong><button class="secondary" id="copy">코드 복사</button><button class="secondary" id="leave">방 나가기</button></div><div class="row"><div class="stat">나: <b id="myName"></b><div class="num" id="myScore">0</div></div><div class="stat">상대: <b id="theirName">대기 중</b><div class="num" id="theirScore">0</div></div><div class="stat">남은 시간<div class="num" id="timer">5:00</div></div></div><p id="phase"></p><button id="start" class="hidden">대결 시작</button><p class="status" id="message">상대를 기다리는 중...</p></section>
 <section class="panel hidden" id="play"><p>기존 Cook 조리 시뮬레이터에서 요리하세요. <b>완성! 평가하기</b>를 누르면 그 점수가 배틀 최고 점수에 반영돼요. 여러 요리를 시도할 수 있어요.</p><iframe id="kitchen" title="Cook 배틀 요리 플레이" src="./index.html?battleEmbed=1&v=20261010"></iframe></section>
 </main><script type="module">
+import {battleSession} from "./assets/battle-session.js";
 import {initializeApp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-app.js";
 import {getDatabase,ref,get,set,update,onValue,runTransaction,serverTimestamp} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-database.js";
 import {getAuth,signInAnonymously} from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 const app=initializeApp({apiKey:"AIzaSyBreTSe1m0-xlbF4aupnU5isRZCihR25IE",authDomain:"formwheel.firebaseapp.com",databaseURL:"https://formwheel-default-rtdb.firebaseio.com",projectId:"formwheel",appId:"1:431583088241:web:74e0e34ea1e3e1170c55d0"}),db=getDatabase(app),auth=getAuth(app),base="formwheelBattles/cook",duration=5*60000;
-const $=id=>document.getElementById(id),id=crypto.randomUUID();
+const session=battleSession("cook",db);
+const $=id=>document.getElementById(id),id=session.id;
 // Each tab is a separate participant, including two tabs of the same browser.
 let code="",isHost=false,room=null,unsubscribe=null,published=-1,locked=false;
 let score=0,money=0,power=1,auto=0,pc=20,ac=60,lastTick=Date.now(),cookStarted=false;
 const safeName=s=>String(s||"플레이어").trim().slice(0,14)||"플레이어";
 const roomRef=c=>ref(db,base+"/"+c);
 function say(t){$("message").textContent=t}
-function timeLeft(){return room?.startedAt?Math.max(0,duration-(Date.now()-room.startedAt)):duration}
+function timeLeft(){return room?.startedAt?Math.max(0,duration-(session.now()-room.startedAt)):duration}
 function active(){return room?.phase==="playing"&&timeLeft()>0}
 function display(){if(!room)return;const me=room.players?.[id];const opponent=Object.entries(room.players||{}).find(([k])=>k!==id)?.[1];$("myName").textContent=me?.name||"나";$("theirName").textContent=opponent?.name||"대기 중";$("myScore").textContent=(me?.score||0).toLocaleString();$("theirScore").textContent=(opponent?.score||0).toLocaleString();$("roomCode").textContent=code;const remaining=Math.ceil(timeLeft()/1000);$("timer").textContent=Math.floor(remaining/60)+":"+String(remaining%60).padStart(2,"0");$("start").classList.toggle("hidden",!isHost||room.phase!=="waiting"||Object.keys(room.players||{}).length!==2);$("play").classList.toggle("hidden",room.phase!=="playing");$("phase").textContent=room.phase==="waiting"?"대기실":room.phase==="playing"?"대결 진행 중":"대결 종료";
 if(room.phase==="waiting")say("2명이 모이면 방장이 대결을 시작할 수 있어요.");
 if(room.phase==="playing")say("현재 진행 중! 종료 시 더 높은 최고 점수가 승리합니다.");
 if(room.phase==="finished"){const players=Object.entries(room.players||{});const sorted=players.slice().sort((a,b)=>(b[1].score||0)-(a[1].score||0));const tie=sorted.length===2&&sorted[0][1].score===sorted[1][1].score;say(sorted.length<2?"상대가 퇴장했어요.":tie?"🤝 무승부!":sorted[0]?.[0]===id?"🏆 승리!":"상대의 승리!");}
 }
-function subscribe(c){unsubscribe?.();code=c;$("join").classList.add("hidden");$("room").classList.remove("hidden");unsubscribe=onValue(roomRef(c),snap=>{const r=snap.val();if(!r){alert("방이 종료되었습니다.");location.reload();return}room=r;if(!r.players?.[id]){alert("방에서 퇴장했습니다.");location.reload();return}isHost=r.host===id;if(r.phase==="playing"&&!cookStarted)resetBattleKitchen();display()},err=>say("실시간 동기화 오류: "+err.message))}
-async function authReady(){if(auth.currentUser)return;try{await signInAnonymously(auth)}catch(e){if(e.code==="auth/operation-not-allowed"||e.code==="auth/admin-restricted-operation"){console.warn("Anonymous sign-in disabled; trying database access under existing rules.");return}throw e}}
+function subscribe(c){unsubscribe?.();code=c;session.remember(c);$("join").classList.add("hidden");$("room").classList.remove("hidden");unsubscribe=onValue(roomRef(c),snap=>{const r=snap.val();if(!r){session.clear();alert("방이 종료되었습니다.");location.reload();return}room=r;if(!r.players?.[id]){session.clear();alert("방에서 퇴장했습니다.");location.reload();return}published=Math.max(published,Number(r.players[id].score)||0);isHost=r.host===id;if(r.phase==="playing"&&!cookStarted)resetBattleKitchen();display()},err=>say("실시간 동기화 오류: "+err.message))}
+async function authReady(){await auth.authStateReady();if(!auth.currentUser)await signInAnonymously(auth)}
 function error(e){const msg=e?.code==="PERMISSION_DENIED"||e?.code==="permission-denied"?"Firebase Database Rules에서 formwheelBattles 경로 접근이 거부됐어요.":e?.code==="auth/operation-not-allowed"?"Firebase 익명 로그인이 비활성화되어 있어요.":e?.message||String(e);$("joinStatus").textContent="연결 실패: "+msg;console.error("Battle connection",e)}
-$("create").onclick=async()=>{if(locked)return;locked=true;try{await authReady();let c;for(let i=0;i<6;i++){c=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x%32]).join("");const r=await runTransaction(roomRef(c),v=>v===null?{host:id,phase:"waiting",createdAt:Date.now(),players:{[id]:{name:safeName($("name").value),score:0}}}:undefined,{applyLocally:false});if(r.committed){subscribe(c);return}}throw Error("방 코드 생성에 실패했어요.")}catch(e){error(e)}finally{locked=false}};
+$("create").onclick=async()=>{if(locked)return;locked=true;try{await authReady();let c;for(let i=0;i<6;i++){c=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x%32]).join("");const r=await runTransaction(roomRef(c),v=>v===null?{host:id,phase:"waiting",createdAt:session.now(),players:{[id]:{name:safeName($("name").value),score:0}}}:undefined,{applyLocally:false});if(r.committed){subscribe(c);return}}throw Error("방 코드 생성에 실패했어요.")}catch(e){error(e)}finally{locked=false}};
 $("enter").onclick=async()=>{if(locked)return;locked=true;const button=$("enter");button.disabled=true;$("joinStatus").textContent="방을 확인하고 있어요…";try{
  await authReady();
- const c=$("codeInput").value.replace(/[\\s-]/g,"").trim().toUpperCase();
+ const c=$("codeInput").value.replace(/[\s-]/g,"").trim().toUpperCase();
  if(!/^[A-Z0-9]{6}$/.test(c))throw Error("6자리 방 코드를 입력하세요.");
  const target=roomRef(c);
  // Important: Firebase RTDB transactions may first run on an empty local cache.
@@ -37,19 +39,20 @@ $("enter").onclick=async()=>{if(locked)return;locked=true;const button=$("enter"
  // isn't mistaken for a nonexistent room and rejected immediately.
  const initial=(await get(target)).val();
  if(!initial)throw Error("이 코드의 방이 존재하지 않아요. 방장에게 새 코드를 확인해 주세요.");
+ if(initial.players?.[id]){subscribe(c);return}
  if(initial.phase!=="waiting")throw Error(initial.phase==="playing"?"이미 시작된 방이에요.":"이미 종료된 방이에요.");
  if(!initial.players||Object.keys(initial.players).length>=2)throw Error("방 정원이 이미 찼어요 (2명).");
  const result=await runTransaction(target,current=>{
-   // The first callback may receive null from the local cache even after get().
-   // Seed it with the freshly fetched room; Firebase will retry against the
-   // server value if the server's room differs.
-   const existing=current===null?initial:current;
+   // Return null for an empty cache so the server can retry with its current value.
+   // Never recreate a room from the earlier read if it was deleted in between.
+   if(current===null)return null;
+   const existing=current;
    if(!existing||existing.phase!=="waiting"||!existing.players)return;
    if(existing.players[id])return existing;
    if(Object.keys(existing.players).length>=2)return;
    return {...existing,players:{...existing.players,[id]:{name:safeName($("name").value),score:0}}};
  },{applyLocally:false});
- if(!result.committed){
+ if(!result.committed||!result.snapshot.val()?.players?.[id]){
    const newest=(await get(target)).val();
    if(!newest)throw Error("참가하는 동안 방이 삭제됐어요.");
    if(newest.phase!=="waiting")throw Error("참가하는 동안 대결이 시작되거나 종료됐어요.");
@@ -59,16 +62,35 @@ $("enter").onclick=async()=>{if(locked)return;locked=true;const button=$("enter"
  $("joinStatus").textContent="방 참가 완료!";
  subscribe(c);
  }catch(e){error(e)}finally{locked=false;button.disabled=false}};
-$("start").onclick=async()=>{if(!isHost||!room||Object.keys(room.players||{}).length!==2)return;try{const r=await runTransaction(roomRef(code),v=>{if(v?.host!==id||v.phase!=="waiting"||Object.keys(v.players||{}).length!==2)return;v.phase="playing";v.startedAt=Date.now();return v},{applyLocally:false});if(r.committed){score=money=0;power=1;auto=0;pc=20;ac=60;lastTick=Date.now();}}catch(e){say(e.message)}};
-$("leave").onclick=async()=>{if(!code)return;try{await runTransaction(roomRef(code),v=>{if(!v?.players?.[id])return;delete v.players[id];if(!Object.keys(v.players).length)return null;if(v.host===id)v.host=Object.keys(v.players)[0];if(v.phase==="playing")v.phase="finished";return v},{applyLocally:false})}finally{location.href="./index.html"}};
-$("copy").onclick=()=>navigator.clipboard.writeText(code);
-async function publish(value){if(!active()||value<=published)return;published=value;try{await runTransaction(ref(db,base+"/"+code+"/players/"+id+"/score"),v=>Math.max(Number(v||0),value),{applyLocally:false})}catch(e){say("점수 전송 실패: "+e.message);published=-1}}
-function increment(n){if(!active())return;money+=n;score=Math.max(score,money);publish(score);$("money").textContent=Math.floor(money).toLocaleString();}
-const kitchen=$("kitchen");let lastKitchenValue=null;
+$("start").onclick=async()=>{if(!isHost||!room||Object.keys(room.players||{}).length!==2)return;try{const r=await runTransaction(roomRef(code),v=>{if(v?.host!==id||v.phase!=="waiting"||Object.keys(v.players||{}).length!==2)return;v.phase="playing";v.startedAt=serverTimestamp();return v},{applyLocally:false});if(r.committed){score=money=0;power=1;auto=0;pc=20;ac=60;lastTick=Date.now();}}catch(e){say(e.message)}};
+$("leave").onclick=async()=>{if(!code)return;try{await runTransaction(roomRef(code),v=>{if(!v?.players?.[id])return;delete v.players[id];if(!Object.keys(v.players).length)return null;if(v.host===id)v.host=Object.keys(v.players)[0];if(v.phase==="playing")v.phase="finished";return v},{applyLocally:false});session.clear();location.href="./index.html"}catch(e){say("퇴장 실패 · 다시 시도해 주세요: "+e.message)}};
+$("copy").onclick=async()=>{try{await navigator.clipboard.writeText(code)}catch{prompt("방 코드",code)}};
+let desiredScore=-1,sendingScore=false;
+async function publish(value){
+ if(Number.isFinite(value))desiredScore=Math.max(desiredScore,Math.min(100,Math.max(0,value)));
+ if(!active()||sendingScore||desiredScore<=published)return;
+ const valueToSend=desiredScore;sendingScore=true;
+ try{const result=await runTransaction(ref(db,base+"/"+code+"/players/"+id+"/score"),v=>Math.max(Number(v||0),valueToSend),{applyLocally:false});if(result.committed)published=Math.max(published,valueToSend)}
+ catch(e){say("점수 저장 대기 중 · 연결 후 재시도합니다: "+e.message)}
+ finally{sendingScore=false}
+}
+const kitchen=$("kitchen");let lastKitchenValue=null,kitchenObserver=null;
 function resetBattleKitchen(){try{const w=$("kitchen").contentWindow;if(typeof w.resetAll!=="function")return;w.resetAll();cookStarted=true;lastKitchenValue=null;}catch(e){say("요리 초기화 오류: "+e.message)}}
-function listenKitchen(){if(room?.phase==="playing"&&!cookStarted)resetBattleKitchen();try{const doc=kitchen.contentDocument;if(!doc)return;const scoreElement=doc.getElementById("score");if(!scoreElement)return;const watch=()=>{if(!active())return;const s=scoreElement.textContent.trim();const n=Number(s);if(s!==lastKitchenValue&&/^\d+(?:\.\d+)?$/.test(s)&&Number.isFinite(n)&&n>=0&&n<=100){lastKitchenValue=s;publish(Math.max(published,n))}};new MutationObserver(watch).observe(scoreElement,{childList:true,characterData:true,subtree:true});watch();}catch(e){say("요리 점수 감지 오류: "+e.message)}}
+function listenKitchen(){if(room?.phase==="playing"&&!cookStarted)resetBattleKitchen();try{const doc=kitchen.contentDocument;if(!doc)return;const scoreElement=doc.getElementById("score");if(!scoreElement)return;const watch=()=>{if(!active())return;const s=scoreElement.textContent.trim();const n=Number(s);if(s!==lastKitchenValue&&/^\d+(?:\.\d+)?$/.test(s)&&Number.isFinite(n)&&n>=0&&n<=100){lastKitchenValue=s;publish(Math.max(published,n))}};kitchenObserver?.disconnect();kitchenObserver=new MutationObserver(watch);kitchenObserver.observe(scoreElement,{childList:true,characterData:true,subtree:true});watch();}catch(e){say("요리 점수 감지 오류: "+e.message)}}
 kitchen.addEventListener("load",listenKitchen);
-setInterval(async()=>{if(!room)return;display();if(room.phase==="playing"&&timeLeft()===0&&isHost){try{await runTransaction(roomRef(code),v=>{if(!v||v.phase!=="playing"||Date.now()<v.startedAt+duration)return;v.phase="finished";return v},{applyLocally:false})}catch(e){say("종료 처리 실패: "+e.message)}}
-
-},500);
+let finishing=false;
+setInterval(async()=>{
+ if(!room)return;display();
+ if(active())publish(desiredScore);
+ if(room.phase==="playing"&&timeLeft()===0&&!finishing){
+  finishing=true;
+  try{await runTransaction(roomRef(code),v=>{
+   if(!v||v.phase!=="playing"||!v.players?.[id]||session.now()<v.startedAt+duration)return;
+   // Include a local score earned before the deadline if its previous send failed.
+   if(desiredScore>=0)v.players[id].score=Math.max(Number(v.players[id].score)||0,desiredScore);
+   v.phase="finished";v.finishedAt=serverTimestamp();return v;
+  },{applyLocally:false})}catch(e){say("종료 처리 실패: "+e.message)}finally{finishing=false}
+ }
+},1000);
+(async()=>{if(!session.code)return;locked=true;try{await authReady();const saved=session.code,snap=await get(roomRef(saved));if(snap.val()?.players?.[id])subscribe(saved);else session.clear()}catch(e){error(e)}finally{locked=false}})();
 </script></body></html>
