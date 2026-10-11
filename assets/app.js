@@ -255,6 +255,7 @@ function judge(){
  r.className="result "+(pts>=75?"good":pts>=45?"warn":"bad");
  r.innerHTML=html;
  log("완성 평가: "+pts+"점");
+ window.dispatchEvent(new CustomEvent("fw:4050:complete",{detail:{gameId:"cook"}}));
 }
 function resetAll(){items=[];plateItems=[];stations={microwave:[],pot:[],pan:[]};kettle={water:false,hot:false};uid=1;lastScore=null;lastJudgedSignature=null;lastJudgedHtml="";$("#result").className="result";$("#result").textContent="평가 전이에요. 버튼을 여러 번 눌러도 점수는 올라가지 않습니다.";$("#log").innerHTML="";log("새 요리를 시작했어요.");render()}
 const COOK_SAVE="formwheel_cook_v1",undoHistory=[];
