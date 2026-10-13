@@ -13,7 +13,22 @@
 <meta property="og:image" content="https://semicolonxss.github.io/Formwheel_Cook/assets/thumbnail.svg">
 <link rel="stylesheet" href="assets/formwheel-brand.css?v=20261008-hub-logo">
 <link rel="icon" type="image/svg+xml" href="https://semicolonxss.github.io/Formwheel/assets/formwheel-favicon.svg">
-<script>if(new URLSearchParams(location.search).get("battleEmbed")==="1")document.documentElement.classList.add("battle-embed");</script><style>.battle-embed .topBtns a[href*="battle.html"],.battle-embed nav[aria-label="게임 모드 전환"]{display:none!important}</style></head>
+<script>if(new URLSearchParams(location.search).get("battleEmbed")==="1")document.documentElement.classList.add("battle-embed");</script><style>.battle-embed .topBtns a[href*="battle.html"],.battle-embed nav[aria-label="게임 모드 전환"]{display:none!important}</style><style>
+body.solo-arena{background:radial-gradient(ellipse at 50% 0%,#4a2349 0%,#19142e 48%,#0e1423 100%);color:#f8f5ed}
+.solo-arena .header{background:#191529!important;border-bottom:3px solid #e5b85c}
+.solo-arena .wrap{position:relative}
+.solo-arena #soloChallenge{background:linear-gradient(135deg,#382348,#171b35)!important;color:#fff;border:2px solid #eac777;box-shadow:0 8px 40px #08091699;text-align:center}
+.solo-arena #soloChallenge h2{color:#ffe29a;font-size:clamp(22px,4vw,34px)}
+.solo-arena #soloChallenge .sub{color:#fff1cf}
+.solo-arena #soloRules{background:#101426;border:1px solid #8e784a;border-radius:12px;padding:15px;line-height:1.9}
+.solo-arena #soloChallenge:before{content:"🏆 FORMWHEEL COOK CHAMPIONSHIP  ·  SOLO ARENA";display:block;letter-spacing:.12em;color:#ffd983;font-size:12px;font-weight:900;margin-bottom:12px}
+.solo-arena .panel:not(#soloChallenge){box-shadow:0 7px 24px #05051344;border:1px solid #c9b989}
+.solo-arena #judgeBtn{background:linear-gradient(110deg,#c88727,#ffe3a0,#bf7828)!important;color:#271708!important;border:2px solid #8e591b;font-weight:900}
+.solo-arena #soloStart{background:linear-gradient(110deg,#d69a36,#ffe1a1)!important;color:#292033!important;font-weight:900}
+.solo-arena #soloExit{background:#eee;color:#232034}
+.solo-arena .wrap:before{content:"✦  COOK ARENA  ✦";display:block;text-align:center;font-size:clamp(23px,5vw,48px);font-weight:900;letter-spacing:.12em;color:#ffe6a0;text-shadow:0 0 22px #ffc35b8a;margin:16px auto}
+@media(prefers-reduced-motion:no-preference){.solo-arena #soloChallenge{animation:arenaIn .55s ease-out}@keyframes arenaIn{from{opacity:.3;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}}
+</style></head>
 <body>
 <header class="header">
 <a class="logo fw-hub-logo" href="https://semicolonxss.github.io/Formwheel/" aria-label="FormWheel 메인으로 이동"><span class="fw-hub-form">Form</span><span class="fw-hub-icon" aria-hidden="true"></span><span class="fw-hub-wheel">Wheel</span></a>
