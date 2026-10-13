@@ -110,8 +110,10 @@ function judge(){
  const unique=[...nameSet];
  const countByName={}; names.forEach(n=>countByName[n]=(countByName[n]||0)+1);
 
+ const fruitNames=defs.filter(d=>d.type==="fruit").map(d=>d.name);
+ const fruitExtras=["투게더 아이스크림","꿀","초콜릿","요거트","생크림","잼","시나몬","우유"];
  const recipes=[
-{name:"과일 디저트",required:[],oneOf:[["사과","바나나","딸기"]],optional:["사과","바나나","딸기","투게더 아이스크림","꿀","초콜릿"],forbidden:["간장","양념된 고기","닭고기","새우","소시지","토마토 소스"],idealMin:2,idealMax:4},
+{name:"과일 디저트",required:[],oneOf:[fruitNames],optional:[...fruitNames,...fruitExtras],forbidden:["간장","양념된 고기","닭고기","새우","소시지","토마토 소스"],idealMin:2,idealMax:4},
 {name:"달걀 채소밥",required:["밥","달걀"],oneOf:[],optional:["당근","대파","양파","간장","소금","버터","시금치"],forbidden:["브라우니 믹스","투게더 아이스크림","초콜릿","꿀"],idealMin:2,idealMax:6},
 {name:"참치 샌드위치",required:["식빵","참치 통조림"],oneOf:[],optional:["오이","양배추","토마토","체다 치즈","달걀"],forbidden:["브라우니 믹스","스파게티 면","투게더 아이스크림"],idealMin:2,idealMax:5},
 {name:"닭고기 채소 플레이트",required:["닭고기"],oneOf:[["감자","당근","브로콜리","양배추"]],optional:["감자","당근","브로콜리","양배추","양파","소금","바비큐 소스"],forbidden:["투게더 아이스크림","브라우니 믹스","초콜릿"],idealMin:2,idealMax:6},
@@ -143,7 +145,7 @@ function judge(){
      name:"브라우니 디저트",
      required:["브라우니 믹스","물"],
      oneOf:[],
-     optional:["투게더 아이스크림","사과","우유","버터","초콜릿","바나나","딸기","꿀"],
+     optional:["투게더 아이스크림",...fruitNames,"우유","버터","초콜릿","꿀","생크림"],
      forbidden:["스파게티 면","난","토마토 소스","바비큐 소스","양념된 고기","베이컨"],
      idealMin:2,idealMax:4
    },
@@ -158,100 +160,74 @@ function judge(){
  ];
 
  function recipeScore(r){
-   let s=0;
-   const missing=r.required.filter(n=>!nameSet.has(n));
-   if(missing.length) return {score:-999,missing};
-   s+=45;
-   if(r.oneOf.length){
-     for(const group of r.oneOf){
-       if(group.some(n=>nameSet.has(n))) s+=12;
-       else return {score:-999,missing:group};
-     }
-   }
-   const optionalUsed=r.optional.filter(n=>nameSet.has(n)).length;
-   s+=Math.min(18,optionalUsed*4);
+   const missing=[...r.required.filter(n=>!nameSet.has(n)),...r.oneOf.filter(group=>!group.some(n=>nameSet.has(n))).map(group=>group.join(" 또는 "))];
+   if(missing.length)return {score:-999,missing};
    const allowed=new Set([...r.required,...r.oneOf.flat(),...r.optional]);
-   const unrelated=unique.filter(n=>!allowed.has(n)&&!r.forbidden.includes(n));
-   s-=unrelated.length*6;
-   const forbiddenUsed=r.forbidden.filter(n=>nameSet.has(n));
-   s-=forbiddenUsed.length*18;
-   if(unique.length>=r.idealMin && unique.length<=r.idealMax) s+=10;
-   if(unique.length>r.idealMax) s-=(unique.length-r.idealMax)*7;
-   return {score:s,forbiddenUsed,optionalUsed};
+   const allowedUsed=unique.filter(n=>allowed.has(n)).length;
+   const unrelated=unique.filter(n=>!allowed.has(n)&&!r.forbidden.includes(n)).length;
+   const forbiddenUsed=r.forbidden.filter(n=>nameSet.has(n)).length;
+   const variety=Math.min(6,Math.max(0,allowedUsed-1)*2);
+   const sizePenalty=Math.max(0,unique.length-r.idealMax)*5;
+   return {score:Math.max(0,Math.min(40,24+r.required.length*3+r.oneOf.length*4+Math.min(8,allowedUsed*2)+variety-unrelated*5-forbiddenUsed*12-sizePenalty)),missing:[],unrelated,forbiddenUsed};
  }
-
  let best={score:-999,name:"자유 요리"};
- for(const r of recipes){
-   const rs=recipeScore(r);
-   if(rs.score>best.score) best={...rs,name:r.name,recipe:r};
- }
-
- let pts=best.score===-999?18:best.score;
+ for(const r of recipes){const rs=recipeScore(r);if(rs.score>best.score)best={...rs,name:r.name,recipe:r};}
+ const isFruitDish=unique.some(n=>fruitNames.includes(n)) && unique.every(n=>fruitNames.includes(n)||fruitExtras.includes(n));
+ if(isFruitDish){const f=recipes.find(r=>r.name==="과일 디저트");best={...recipeScore(f),name:f.name,recipe:f};}
+ const baseScore=best.score===-999?12:best.score;
+ let pts=baseScore;
  const notes=[];
- const closest=recipes.map(r=>({r,missing:[...r.required.filter(n=>!nameSet.has(n)),...r.oneOf.filter(group=>!group.some(n=>nameSet.has(n))).map(group=>group.join(" 또는 "))]})).sort((a,b)=>a.missing.length-b.missing.length)[0];
- if(closest?.missing.length)notes.push(closest.r.name+"에 부족한 재료: "+closest.missing.join(", ")+". 다음 행동: 부족 재료를 준비해 주세요.");
- if(base.some(x=>["meat","egg","seafood"].includes(x.def.type)&&x.heat<45))notes.push("다음 행동: 고기·달걀·해산물을 더 가열해 주세요.");
- if(base.some(x=>x.heat>=80))notes.push("다음 행동: 과조리 재료를 교체하고 가열 시간을 줄여 주세요.");
  if(best.score===-999){
-   notes.push("정해진 대표 조합과는 거리가 있어 자유 요리 기준으로 평가했어요.");
- }else{
-   notes.push(best.name+"에 가장 가까워요.");
- }
-
- // 조리 기술: 중복 클릭이 아니라 상태만 본다.
- const cuttable=base.filter(x=>["veg","fruit","meat"].includes(x.def.type));
- const cutGood=cuttable.filter(x=>x.cut||x.crushed).length;
- if(cuttable.length) pts+=Math.min(8,Math.round(8*cutGood/cuttable.length));
-
+   const closest=recipes.map(r=>({r,missing:[...r.required.filter(n=>!nameSet.has(n)),...r.oneOf.filter(group=>!group.some(n=>nameSet.has(n))).map(group=>group.join(" 또는 ")),...r.forbidden.filter(n=>nameSet.has(n)).map(n=>"제외: "+n)]})).sort((a,b)=>a.missing.length-b.missing.length)[0];
+   if(closest?.missing.length)notes.push(closest.r.name+" 추천: "+closest.missing.join(", "));
+   notes.push("대표 레시피 외의 창작 요리예요.");
+ }else notes.push(best.name+" 레시피와 잘 맞아요.");
+ const fruitDish=best.name==="과일 디저트";
+ const processable=base.filter(x=>["veg","fruit","meat"].includes(x.def.type));
+ const prepared=processable.filter(x=>x.cut||x.crushed).length;
+ const prepScore=processable.length?Math.round(15*prepared/processable.length):fruitDish?10:8;
+ pts+=prepScore;
  const hasMixture=plateItems.some(x=>x.isMixture);
- if(hasMixture) pts+=5; // 혼합 자체는 소량만 보너스
-
- // 익힘은 재료 종류별로 평가.
- let cookQuality=0,cookChecks=0;
+ const mixScore=hasMixture&&base.length>=2?8:0;
+ pts+=mixScore;
+ let cookingScore=0,cookingCount=0,unsafe=0;
  for(const x of base){
-   if(["meat","egg","seafood"].includes(x.def.type)){
-     cookChecks++;
-     if(x.heat>=45 && x.heat<80) cookQuality+=1;
-     else if(x.heat>=80) cookQuality-=0.5;
-     else cookQuality-=2;
-   }else if(["pasta","mix","cheese","veg","bread"].includes(x.def.type)){
-     cookChecks++;
-     if(x.heat>=15 && x.heat<80) cookQuality+=1;
-     else if(x.heat>=80) cookQuality-=0.75;
-   }
+   const t=x.def.type,h=x.heat;
+   if(x.burnt||h>=80){unsafe++;cookingCount++;continue;}
+   if(["meat","egg","seafood"].includes(t)){cookingCount++;if(h>=45)cookingScore+=1;else unsafe++;}
+   else if(t==="pasta"){cookingCount++;if(x.method==="boil"&&h>=15)cookingScore+=1;}
+   else if(["veg","bread","cheese","mix"].includes(t)&&!fruitDish){cookingCount++;if(h>=15&&h<80)cookingScore+=1;else if(t==="veg"&&h<15)cookingScore+=0.65;}
  }
- if(cookChecks){
-   pts+=Math.max(-20,Math.min(12,Math.round((cookQuality/cookChecks)*12)));
- }
-
- // 이상한 재료 과다 투입 / 같은 재료 복제 페널티.
- const excessUnique=Math.max(0,unique.length-8);
- if(excessUnique){pts-=excessUnique*8;notes.push("재료 종류가 너무 많아 조합이 흐려졌어요.");}
+ const heatScore=cookingCount?Math.round(20*cookingScore/cookingCount):20;
+ pts+=heatScore;
+ const properMethod=base.filter(x=>!x.burnt&&x.heat<80&&((x.def.type==="pasta"&&x.method==="boil")||(["meat","egg","seafood"].includes(x.def.type)&&x.heat>=45&&["fry","grill","boil"].includes(x.method)))).length;
+ const techniqueScore=Math.min(7,properMethod*3+(fruitDish&&hasMixture?4:0));
+ pts+=techniqueScore;
+ const varietyScore=Math.min(10,Math.max(0,unique.length-1)*3);
+ pts+=varietyScore;
  const duplicateExcess=Object.values(countByName).reduce((a,n)=>a+Math.max(0,n-2),0);
- if(duplicateExcess){pts-=duplicateExcess*5;notes.push("같은 재료를 너무 많이 넣었어요.");}
-
- const properMethod=base.filter(x=>x.heat>=45&&x.heat<80&&!x.burnt&&((x.def.type==="pasta"&&x.method==="boil")||(["meat","egg","seafood","veg","ready"].includes(x.def.type)&&["fry","grill"].includes(x.method))));
- if(properMethod.length){pts+=Math.min(6,properMethod.length*2);notes.push("재료에 어울리는 도구로 조리했어요.");}
+ const excessUnique=Math.max(0,unique.length-(best.recipe?.idealMax||6));
  const unboiledPasta=base.filter(x=>x.def.type==="pasta"&&x.method!=="boil").length;
- if(unboiledPasta){pts-=unboiledPasta*12;notes.push("면은 물과 함께 냄비에서 삶아 보세요.");}
  const burnt=base.filter(x=>x.burnt).length;
- if(burnt){pts-=burnt*15;notes.push("팬에서 탄 재료가 있어요. 가열 사이에 뒤집거나 저어 주세요.");}
  const over=base.filter(x=>x.heat>=80).length;
  const rawMeat=base.filter(x=>["meat","egg","seafood"].includes(x.def.type)&&x.heat<45).length;
- if(over){pts-=over*10;notes.push("과조리된 재료가 있어요.");}
- if(rawMeat){pts-=rawMeat*30;notes.push("고기·달걀·해산물 재료가 충분히 가열되지 않았어요.");}
-
- // 100점은 대표 조합 + 적절한 재료 수 + 안전한 가열이어야만 가능.
- if(best.score===-999) pts=Math.min(69,pts);
- if(unique.length>8) pts=Math.min(84,pts);
- if(rawMeat||burnt||over>=2) pts=Math.min(74,pts);
-
- pts=Math.max(0,Math.min(100,Math.round(pts)));
+ const penalties=duplicateExcess*6+excessUnique*5+unboiledPasta*12+burnt*18+over*12+rawMeat*28;
+ pts-=penalties;
+ if(duplicateExcess)notes.push("같은 재료가 너무 많아요.");
+ if(excessUnique)notes.push("재료가 너무 많아 조합의 균형이 흐려졌어요.");
+ if(unboiledPasta)notes.push("면은 물과 함께 삶아 주세요.");
+ if(burnt||over)notes.push("탄 재료나 과조리된 재료를 교체해 주세요.");
+ if(rawMeat)notes.push("고기·달걀·해산물을 충분히 가열해 주세요.");
+ if(fruitDish)notes.push("새로 추가된 과일도 정상적으로 인정해요!");
+ if(best.score===-999)pts=Math.min(74,pts);
+ if(rawMeat||burnt||over)pts=Math.min(69,pts);
+ const breakdown="레시피 "+baseScore+"/40 · 손질 "+prepScore+"/15 · 혼합 "+mixScore+"/8 · 익힘 "+heatScore+"/20 · 조리법 "+techniqueScore+"/7 · 다양성 "+varietyScore+"/10"+(penalties?" · 감점 -"+penalties:"");
+  pts=Math.max(0,Math.min(100,Math.round(pts)));
  lastScore=pts;
  lastJudgedSignature=sig;
 
  const grade=pts>=90?"훌륭해요!":pts>=75?"잘 만들었어요.":pts>=55?"괜찮지만 개선할 점이 있어요.":"조합이나 조리 상태를 더 다듬어 보세요.";
- const html="<b>"+pts+" / 100점 · "+grade+"</b><br>"+notes.join(" ");
+ const html="<b>"+pts+" / 100점 · "+grade+"</b><br><small>"+breakdown+"</small><br>"+notes.join(" ");
  lastJudgedHtml=html;
  render();
  const r=$("#result");
