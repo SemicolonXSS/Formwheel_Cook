@@ -29,7 +29,7 @@ const defs=[
 ["후추","🌶️","season"],["올리브유","🫒","fat"],["식용유","🫗","fat"],["설탕","🍬","sweet"],["밀가루","🌾","mix"],["생크림","🥛","liquid"],["요거트","🥣","liquid"],["레몬","🍋","fruit"],["라임","🍋‍🟩","fruit"],["블루베리","🫐","fruit"],["포도","🍇","fruit"],["파인애플","🍍","fruit"],["복숭아","🍑","fruit"],["고구마","🍠","veg"],["애호박","🥒","veg"],["가지","🍆","veg"],["상추","🥬","veg"],["양상추","🥬","veg"],["청양고추","🌶️","veg"],["고추","🌶️","veg"],["아보카도","🥑","veg"],["콩나물","🌱","veg"],["두부","◻️","ready"],["김치","🥬","ready"],["김","🍙","ready"],["떡","🍡","ready"],["우동 면","🍜","pasta"],["라면 사리","🍜","pasta"],["돼지고기","🥩","meat"],["소고기","🥩","meat"],["햄","🍖","meat"],["연어","🐟","seafood"],["오징어","🦑","seafood"],["게맛살","🦀","seafood"],["파마산 치즈","🧀","cheese"],["마요네즈","🥫","sauce"],["케첩","🍅","sauce"],["머스터드","🥫","sauce"],["고추장","🌶️","season"],["된장","🥣","season"],["참기름","🫗","fat"],["식초","🧴","season"],["시나몬","🍂","season"],["잼","🍓","sweet"]
 ].map((x,i)=>({id:"d"+i,name:x[0],emoji:x[1],type:x[2]}));
 let uid=1,items=[],plateItems=[],stations={microwave:[],pot:[],pan:[]},kettle={water:false,hot:false},lastScore=null,lastJudgedSignature=null,lastJudgedHtml="";
-const $=s=>document.querySelector(s), $=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 const battleEmbed=new URLSearchParams(location.search).get("battleEmbed")==="1";
 let battleRules=null,battleSubmitted=false,soloRules=null,soloSubmitted=false;
 window.setCookBattleRules=function(rules,submitted=false){
