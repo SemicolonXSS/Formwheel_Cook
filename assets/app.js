@@ -90,6 +90,37 @@ function dishSignature(){
  })).sort((a,b)=>a.n.localeCompare(b.n));
  return JSON.stringify({base,top});
 }
+
+// The cookbook is separate from the current kitchen save: restarting a recipe never erases discoveries.
+const COOK_BOOK_KEY="formwheel_cook_book_v1";
+const cookbookRecipes=["과일 디저트","달걀 채소밥","참치 샌드위치","닭고기 채소 플레이트","난 피자","토마토 파스타","BBQ 파스타","브라우니 디저트","고기 채소 플레이트"];
+function getCookbook(){try{const v=JSON.parse(localStorage.getItem(COOK_BOOK_KEY)||"{}");return v&&typeof v==="object"&&!Array.isArray(v)?v:{}}catch{return {}}}
+function renderCookbook(){
+ const records=getCookbook(),list=$("#cookbookList"),count=$("#cookbookCount");
+ if(!list||!count)return;
+ count.textContent=Object.keys(records).length+"종 발견 · 대표 레시피 "+cookbookRecipes.length+"종";
+ list.replaceChildren();
+ const keys=[...new Set([...cookbookRecipes,...Object.keys(records)])];
+ keys.forEach(name=>{
+   const item=records[name],card=document.createElement("div");card.className="manualStep";
+   const title=document.createElement("b");title.textContent=item?"✅ "+name+" · 최고 "+item.best+"점":"🔒 "+name;
+   card.appendChild(title);
+   const detail=document.createElement("span");detail.textContent=item?"발견 "+item.count+"회 · 재료: "+item.ingredients.join(", "):"아직 발견하지 않았어요. 요리를 완성하고 평가해 보세요.";
+   card.appendChild(detail);list.appendChild(card);
+ });
+}
+function registerDish(name,score,base){
+ try{
+   const book=getCookbook(),old=book[name];
+   const ingredients=[...new Set(base.map(x=>x.def.name))];
+   book[name]={best:Math.max(score,old?.best||0),count:(old?.count||0)+1,ingredients:!old||score>=old.best?ingredients:old.ingredients};
+   localStorage.setItem(COOK_BOOK_KEY,JSON.stringify(book));
+   if(!old)log("📖 새 요리 발견! "+name+"이(가) 도감에 등록됐어요.");
+   else if(score>old.best)log("🏆 "+name+"의 도감 최고 점수를 갱신했어요!");
+   renderCookbook();
+ }catch{log("도감을 저장하지 못했어요. 브라우저 저장 설정을 확인하세요.");}
+}
+
 function judge(){
  if(!plateItems.length){
    $("#result").className="result bad";
@@ -234,6 +265,7 @@ function judge(){
  r.className="result "+(pts>=75?"good":pts>=45?"warn":"bad");
  r.innerHTML=html;
  log("완성 평가: "+pts+"점");
+ registerDish(best.name,pts,base);
  window.dispatchEvent(new CustomEvent("fw:4050:complete",{detail:{gameId:"cook"}}));
 }
 function resetAll(){items=[];plateItems=[];stations={microwave:[],pot:[],pan:[]};kettle={water:false,hot:false};uid=1;lastScore=null;lastJudgedSignature=null;lastJudgedHtml="";$("#result").className="result";$("#result").textContent="평가 전이에요. 버튼을 여러 번 눌러도 점수는 올라가지 않습니다.";$("#log").innerHTML="";log("새 요리를 시작했어요.");render()}
@@ -271,7 +303,7 @@ $("#tutorialBack").onclick=()=>{if(tutorialIndex>0)tutorialIndex--;showTutorial(
 $("#tutorialNext").onclick=()=>{if(tutorialIndex===5)endTutorial();else{tutorialIndex++;showTutorial();}};
 $("#tutorialEnd").onclick=endTutorial;
 try{if(!localStorage.getItem("formwheel_cook_tutorial_v1"))showTutorial();}catch{showTutorial();}
-renderInventory();render();log("주방이 준비됐어요. 설명서를 눌러 플레이 방법을 볼 수 있어요.");
+renderInventory();render();renderCookbook();log("주방이 준비됐어요. 설명서를 눌러 플레이 방법을 볼 수 있어요.");
 $$("[data-act]").forEach(b=>b.addEventListener("click",()=>doAction(b.dataset.act)));$$("[data-put]").forEach(b=>b.addEventListener("click",()=>moveTo(b.dataset.put)));$$("[data-take]").forEach(b=>b.addEventListener("click",()=>takeFrom(b.dataset.take)));$("[data-heat='microwave']").addEventListener("click",()=>$("#heatModal").classList.add("show"));$$(".heatTime").forEach(b=>b.addEventListener("click",()=>heatMicrowave(+b.dataset.sec)));$("#closeHeat").addEventListener("click",()=>$("#heatModal").classList.remove("show"));
 $("#fillKettle").addEventListener("click",()=>{kettle.water=true;kettle.hot=false;invalidateScore();log("커피포트에 물을 넣었어요.");render()});$("#boilKettle").addEventListener("click",()=>{if(!kettle.water)return log("먼저 커피포트에 물을 넣으세요.");kettle.hot=true;invalidateScore();log("물이 끓었어요!");render()});$("#pourKettle").addEventListener("click",()=>{if(!kettle.hot)return log("뜨거운 물이 준비되지 않았어요.");const d=defs.find(x=>x.name==="물"),w=createItem(d);w.hotWater=true;w.heat=55;items.push(w);kettle={water:false,hot:false};invalidateScore();log("뜨거운 물을 작업대에 준비했어요.");render()});
 $("#judgeBtn").addEventListener("click",judge);$("#resetBtn").addEventListener("click",()=>{if(confirm("현재 요리를 버리고 새로 시작할까요?"))resetAll()});$("#helpBtn").addEventListener("click",()=>$("#helpModal").classList.add("show"));$("#closeHelp").addEventListener("click",()=>$("#helpModal").classList.remove("show"));
