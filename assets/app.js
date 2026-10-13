@@ -38,8 +38,9 @@ window.setCookBattleRules=function(rules,submitted=false){
  resetAll();renderInventory();
  $("#judgeBtn").textContent=battleSubmitted?"✅ 제출 완료":"🍽️ 최종 제출 (1회)";
  $("#judgeBtn").disabled=battleSubmitted;
+ if(battleSubmitted)window.lockCookBattle();
 };
-window.lockCookBattle=function(){battleSubmitted=true;$("#judgeBtn").disabled=true;$("#judgeBtn").textContent="✅ 제출 완료";};
+window.lockCookBattle=function(score){battleSubmitted=true;$("#judgeBtn").disabled=true;$("#judgeBtn").textContent="✅ 제출 완료";if(Number.isFinite(score)){$("#score").textContent=score;$("#result").textContent="🍽️ 최종 "+score+"점 제출 완료!";}document.querySelectorAll(".ing,.food,.action,.stationBtns button,.heatTime,#resetBtn,#undoBtn").forEach(b=>b.disabled=true);};
 function battleDishScore(){
  const parts=allBase(plateItems), allowed=new Set(battleRules.allowed),unique=new Set(parts.map(x=>x.def.name));
  const cookable=parts.filter(x=>["meat","seafood","egg","pasta"].includes(x.def.type));
