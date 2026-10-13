@@ -38,7 +38,7 @@ if(room.phase==="waiting")say("2명이 모이면 방장이 대결을 시작할 �
 if(room.phase==="playing")say("현재 진행 중! 종료 시 더 높은 최고 점수가 승리합니다.");
 $("finishResult").hidden=room.phase!=="finished";if(room.phase==="finished"){const players=Object.entries(room.players||{});const sorted=players.slice().sort((a,b)=>(b[1].score||0)-(a[1].score||0));const tie=sorted.length===2&&sorted[0][1].score===sorted[1][1].score;const winner=sorted[0]?.[0]===id;const mine=Number(me?.score)||0,theirs=Number(opponent?.score)||0;const verdict=sorted.length<2?"상대 퇴장 · 대결 종료":tie?"🤝 무승부!":winner?"🏆 승리!":"👏 상대 승리!";say(verdict);$("finishResult").textContent=verdict+" · 내 최고 "+mine+"점 / 상대 최고 "+theirs+"점"+(sorted.length===2?" · 점수 차 "+Math.abs(mine-theirs)+"점":"");}
 }
-function subscribe(c){unsubscribe?.();code=c;session.remember(c);$("join").classList.add("hidden");$("room").classList.remove("hidden");unsubscribe=onValue(roomRef(c),snap=>{const r=snap.val();if(!r){session.clear();alert("방이 종료되었습니다.");location.reload();return}room=r;if(!r.players?.[id]){session.clear();alert("방에서 퇴장했습니다.");location.reload();return}published=Math.max(published,Number(r.players[id].score)||0);isHost=r.host===id;if(r.phase==="playing"&&!cookStarted)resetBattleKitchen();if(r.players[id].submitted)lockKitchen();display()},err=>say("실시간 동기화 오류: "+err.message))}
+function subscribe(c){unsubscribe?.();code=c;session.remember(c);$("join").classList.add("hidden");$("room").classList.remove("hidden");unsubscribe=onValue(roomRef(c),snap=>{const r=snap.val();if(!r){session.clear();alert("방이 종료되었습니다.");location.reload();return}room=r;if(!r.players?.[id]){session.clear();alert("방에서 퇴장했습니다.");location.reload();return}published=Math.max(published,Number(r.players[id].score)||0);isHost=r.host===id;if(r.phase==="playing"&&!cookStarted)resetBattleKitchen();if(r.players[id].submitted)lockKitchen(r.players[id].score);display()},err=>say("실시간 동기화 오류: "+err.message))}
 async function authReady(){await auth.authStateReady();if(!auth.currentUser)await signInAnonymously(auth)}
 function error(e){const msg=e?.code==="PERMISSION_DENIED"||e?.code==="permission-denied"?"Firebase Database Rules에서 formwheelBattles 경로 접근이 거부됐어요.":e?.code==="auth/operation-not-allowed"?"Firebase 익명 로그인이 비활성화되어 있어요.":e?.message||String(e);$("joinStatus").textContent="연결 실패: "+msg;console.error("Battle connection",e)}
 $("create").onclick=async()=>{if(locked)return;locked=true;try{await authReady();let c;for(let i=0;i<6;i++){c=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x%32]).join("");const r=await runTransaction(roomRef(c),v=>v===null?{host:id,phase:"waiting",createdAt:session.now(),players:{[id]:{name:safeName($("name").value),score:0}}}:undefined,{applyLocally:false});if(r.committed){subscribe(c);return}}throw Error("방 코드 생성에 실패했어요.")}catch(e){error(e)}finally{locked=false}};
@@ -89,7 +89,7 @@ async function publish(value){
 }
 const kitchen=$("kitchen");let lastKitchenValue=null,kitchenObserver=null;
 function resetBattleKitchen(){try{const w=kitchen.contentWindow;if(typeof w?.setCookBattleRules!=="function"||!room?.rules)return;w.setCookBattleRules(room.rules,!!room.players?.[id]?.submitted);cookStarted=true;lastKitchenValue=null;const tutorial=w.document.getElementById("tutorialBar");if(tutorial)tutorial.hidden=true;}catch(e){say("요리 초기화 오류: "+e.message)}}
-function lockKitchen(){try{kitchen.contentWindow?.lockCookBattle?.()}catch{}}
+function lockKitchen(score){try{kitchen.contentWindow?.lockCookBattle?.(score)}catch{}}
 let submitting=false;
 window.addEventListener("message",async e=>{
  if(e.origin!==location.origin||e.source!==kitchen.contentWindow||e.data?.type!=="fw-cook-battle-submit"||submitting||!active()||!cookStarted||room.players?.[id]?.submitted)return;
@@ -109,12 +109,12 @@ window.addEventListener("message",async e=>{
   if(Object.values(v.players).length===2&&Object.values(v.players).every(p=>p.submitted)){v.phase="finished";v.finishedAt=serverTimestamp()}
   return v;
  },{applyLocally:false});
- if(r.committed){published=score;lockKitchen();say("🍽️ 최종 "+score+"점 제출 완료!");}
+ if(r.committed){published=score;lockKitchen(score);say("🍽️ 최종 "+score+"점 제출 완료!");}
  else say("제출되지 않았어요. 시간 내에 다시 시도해 주세요.");
  }catch(err){say("제출 오류: "+err.message)}finally{submitting=false}
 });
 
-function listenKitchen(){if(room?.phase==="playing"&&!cookStarted)resetBattleKitchen();try{const doc=kitchen.contentDocument;if(!doc)return;const scoreElement=doc.getElementById("score");if(!scoreElement)return;const watch=()=>{if(!active()||!cookStarted)return;const s=scoreElement.textContent.trim();const n=Number(s);if(s!==lastKitchenValue&&/^\d+(?:\.\d+)?$/.test(s)&&Number.isFinite(n)&&n>=0&&n<=100){lastKitchenValue=s;publish(Math.max(published,n))}};kitchenObserver?.disconnect();kitchenObserver=new MutationObserver(()=>{});kitchenObserver.observe(scoreElement,{childList:true,characterData:true,subtree:true});}catch(e){say("요리 점수 감지 오류: "+e.message)}}
+function listenKitchen(){if(room?.phase==="playing"&&!cookStarted)resetBattleKitchen()}
 kitchen.addEventListener("load",listenKitchen);
 let finishing=false;
 setInterval(async()=>{
