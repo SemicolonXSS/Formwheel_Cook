@@ -29,7 +29,30 @@ const defs=[
 ["후추","🌶️","season"],["올리브유","🫒","fat"],["식용유","🫗","fat"],["설탕","🍬","sweet"],["밀가루","🌾","mix"],["생크림","🥛","liquid"],["요거트","🥣","liquid"],["레몬","🍋","fruit"],["라임","🍋‍🟩","fruit"],["블루베리","🫐","fruit"],["포도","🍇","fruit"],["파인애플","🍍","fruit"],["복숭아","🍑","fruit"],["고구마","🍠","veg"],["애호박","🥒","veg"],["가지","🍆","veg"],["상추","🥬","veg"],["양상추","🥬","veg"],["청양고추","🌶️","veg"],["고추","🌶️","veg"],["아보카도","🥑","veg"],["콩나물","🌱","veg"],["두부","◻️","ready"],["김치","🥬","ready"],["김","🍙","ready"],["떡","🍡","ready"],["우동 면","🍜","pasta"],["라면 사리","🍜","pasta"],["돼지고기","🥩","meat"],["소고기","🥩","meat"],["햄","🍖","meat"],["연어","🐟","seafood"],["오징어","🦑","seafood"],["게맛살","🦀","seafood"],["파마산 치즈","🧀","cheese"],["마요네즈","🥫","sauce"],["케첩","🍅","sauce"],["머스터드","🥫","sauce"],["고추장","🌶️","season"],["된장","🥣","season"],["참기름","🫗","fat"],["식초","🧴","season"],["시나몬","🍂","season"],["잼","🍓","sweet"]
 ].map((x,i)=>({id:"d"+i,name:x[0],emoji:x[1],type:x[2]}));
 let uid=1,items=[],plateItems=[],stations={microwave:[],pot:[],pan:[]},kettle={water:false,hot:false},lastScore=null,lastJudgedSignature=null,lastJudgedHtml="";
-const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const $=s=>document.querySelector(s), $=s=>[...document.querySelectorAll(s)];
+const battleEmbed=new URLSearchParams(location.search).get("battleEmbed")==="1";
+let battleRules=null,battleSubmitted=false;
+window.setCookBattleRules=function(rules,submitted=false){
+ if(!battleEmbed)return;
+ battleRules=rules; battleSubmitted=!!submitted;
+ resetAll();renderInventory();
+ $("#judgeBtn").textContent=battleSubmitted?"✅ 제출 완료":"🍽️ 최종 제출 (1회)";
+ $("#judgeBtn").disabled=battleSubmitted;
+};
+window.lockCookBattle=function(){battleSubmitted=true;$("#judgeBtn").disabled=true;$("#judgeBtn").textContent="✅ 제출 완료";};
+function battleDishScore(){
+ const parts=allBase(plateItems), allowed=new Set(battleRules.allowed),unique=new Set(parts.map(x=>x.def.name));
+ const cookable=parts.filter(x=>["meat","seafood","egg","pasta"].includes(x.def.type));
+ const prepared=parts.filter(x=>x.cut||x.crushed);
+ const cooked=cookable.filter(x=>x.heat>=45&&x.heat<80&&!x.burnt);
+ const mixed=plateItems.some(x=>x.isMixture);
+ const spoiled=parts.filter(x=>x.burnt||x.heat>=80||(["meat","seafood","egg"].includes(x.def.type)&&x.heat<45));
+ const weights=battleRules.weights;
+ const metrics=[Math.min(1,unique.size/4),parts.length?prepared.length/parts.length:0,mixed?1:0,cookable.length?cooked.length/cookable.length:0,parts.length?Math.min(1,unique.size/parts.length):0];
+ const score=Math.max(0,Math.min(100,Math.round(metrics.reduce((sum,v,i)=>sum+v*weights[i],0)-spoiled.length*15-(parts.some(x=>!allowed.has(x.def.name))?100:0))));
+ return {score,metrics,ingredients:[...unique],dish:parts.map(x=>({name:x.def.name,cut:!!x.cut,crushed:!!x.crushed,heat:x.heat||0,method:x.method||"",burnt:!!x.burnt})),mixed};
+}
+
 
 function baseComponents(it){return it.components?it.components.flatMap(c=>baseComponents(c)):[it]}
 function allBase(list){return list.flatMap(x=>baseComponents(x))}
@@ -40,7 +63,7 @@ function displayName(it){if(it.isMixture)return it.def.name;if(it.def.name==="�
 function mixName(parts){const names=parts.flatMap(x=>baseComponents(x).map(c=>displayName(c)));const uniq=[...new Set(names)];return uniq.slice(0,4).join(" + ")+(uniq.length>4?" 외 "+(uniq.length-4)+"개":"")+" 혼합물"}
 function mixEmoji(parts){const es=[...new Set(parts.flatMap(x=>baseComponents(x).map(c=>c.def.emoji)))];return es.slice(0,3).join("")}
 const typeLabels={liquid:"물 음료",pasta:"면",fruit:"과일",veg:"채소 야채",season:"조미료 양념",sauce:"소스",bread:"빵",meat:"고기 육류",cheese:"치즈 유제품",mix:"믹스",icecream:"아이스크림 디저트",egg:"달걀 계란",fat:"버터 유지",seafood:"해산물",ready:"즉석 식품",sweet:"단맛 디저트"};
-function renderInventory(){const q=$("#ingredientSearch").value.trim().toLowerCase().replace(/\s/g,"");const found=defs.filter(d=>(d.name+" "+(typeLabels[d.type]||"")).toLowerCase().replace(/\s/g,"").includes(q));$("#inventory").innerHTML="";$("#ingredientCount").textContent=found.length+" / "+defs.length+"개 재료";found.forEach(d=>{const b=document.createElement("button");b.className="ing";b.innerHTML='<span class="emoji">'+d.emoji+'</span><span class="ingName">'+d.name+'</span>';b.addEventListener("click",()=>{items.push(createItem(d));invalidateScore();log(d.name+"을(를) 작업대에 꺼냈어요.");render()});$("#inventory").appendChild(b)});if(!found.length)$("#inventory").textContent="검색 결과가 없어요. 다른 이름이나 종류를 입력해 보세요."}
+function renderInventory(){const q=$("#ingredientSearch").value.trim().toLowerCase().replace(/\s/g,"");const found=defs.filter(d=>(!battleEmbed||!battleRules||battleRules.allowed.includes(d.name))&&(d.name+" "+(typeLabels[d.type]||"")).toLowerCase().replace(/\s/g,"").includes(q));$("#inventory").innerHTML="";$("#ingredientCount").textContent=found.length+" / "+defs.length+"개 재료";found.forEach(d=>{const b=document.createElement("button");b.className="ing";b.innerHTML='<span class="emoji">'+d.emoji+'</span><span class="ingName">'+d.name+'</span>';b.addEventListener("click",()=>{items.push(createItem(d));invalidateScore();log(d.name+"을(를) 작업대에 꺼냈어요.");render()});$("#inventory").appendChild(b)});if(!found.length)$("#inventory").textContent="검색 결과가 없어요. 다른 이름이나 종류를 입력해 보세요."}
 function foodButton(it){const b=document.createElement("button");b.className="food"+(it.selected?" selected":"");const comp=it.isMixture?'<div class="components">'+baseComponents(it).map(x=>displayName(x)).join(", ")+'</div>':"";b.innerHTML='<div class="name">'+it.def.emoji+" "+displayName(it)+'</div><div class="state">'+stateText(it)+'</div>'+comp+'<div class="heat"><i style="width:'+Math.min(100,it.heat)+'%"></i></div>';b.addEventListener("click",()=>{it.selected=!it.selected;render()});return b}
 function render(){const c=$("#counter");c.innerHTML="";items.forEach(it=>c.appendChild(foodButton(it)));if(!items.length)c.innerHTML='<div class="hint">재료를 왼쪽 보관함에서 꺼내보세요.</div>';$("#selectionText").textContent="선택 "+items.filter(x=>x.selected).length+"개";for(const s of ["microwave","pot","pan"]){const arr=stations[s];$("#"+s+"Inside").textContent=arr.length?arr.map(x=>x.def.emoji+" "+displayName(x)+" ("+stateText(x)+")").join(", "):"비어 있음"}$("#kettleInside").textContent=kettle.hot?"뜨거운 물 준비됨":kettle.water?"물 들어 있음":"물 없음";const p=$("#plate");p.innerHTML=plateItems.length?plateItems.map(x=>'<span title="'+x.def.name+'">'+x.def.emoji+'</span>').join(""):"<span>🍽️</span>";$("#score").textContent=lastScore===null?"미평가":lastScore}
 function selected(){return items.filter(x=>x.selected)}
@@ -122,6 +145,15 @@ function registerDish(name,score,base){
 }
 
 function judge(){
+ if(battleEmbed){
+   if(battleSubmitted)return log("이번 배틀에서는 이미 음식을 제출했어요.");
+   if(!battleRules)return log("배틀 시작 후 요리를 제출할 수 있어요.");
+   if(!plateItems.length)return log("접시에 음식을 담아주세요.");
+   const evaluation=battleDishScore();
+   window.parent.postMessage({type:"fw-cook-battle-submit",evaluation},"*");
+   $("#result").textContent="제출 처리 중이에요…";
+   return;
+ }
  if(!plateItems.length){
    $("#result").className="result bad";
    $("#result").textContent="접시가 비어 있어요! 먼저 음식을 담아주세요.";
