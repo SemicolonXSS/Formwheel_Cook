@@ -31,7 +31,7 @@ const defs=[
 let uid=1,items=[],plateItems=[],stations={microwave:[],pot:[],pan:[]},kettle={water:false,hot:false},lastScore=null,lastJudgedSignature=null,lastJudgedHtml="";
 const $=s=>document.querySelector(s), $=s=>[...document.querySelectorAll(s)];
 const battleEmbed=new URLSearchParams(location.search).get("battleEmbed")==="1";
-let battleRules=null,battleSubmitted=false;
+let battleRules=null,battleSubmitted=false,soloRules=null,soloSubmitted=false;
 window.setCookBattleRules=function(rules,submitted=false){
  if(!battleEmbed)return;
  battleRules=rules; battleSubmitted=!!submitted;
@@ -42,13 +42,13 @@ window.setCookBattleRules=function(rules,submitted=false){
 };
 window.lockCookBattle=function(score){battleSubmitted=true;$("#judgeBtn").disabled=true;$("#judgeBtn").textContent="✅ 제출 완료";if(Number.isFinite(score)){$("#score").textContent=score;$("#result").textContent="🍽️ 최종 "+score+"점 제출 완료!";}document.querySelectorAll(".ing,.food,.action,.stationBtns button,.heatTime,#resetBtn,#undoBtn").forEach(b=>b.disabled=true);};
 function battleDishScore(){
- const parts=allBase(plateItems), allowed=new Set(battleRules.allowed),unique=new Set(parts.map(x=>x.def.name));
+ const parts=allBase(plateItems), rules=battleEmbed?battleRules:soloRules, allowed=new Set(rules.allowed),unique=new Set(parts.map(x=>x.def.name));
  const cookable=parts.filter(x=>["meat","seafood","egg","pasta"].includes(x.def.type));
  const prepared=parts.filter(x=>x.cut||x.crushed);
  const cooked=cookable.filter(x=>x.heat>=45&&x.heat<80&&!x.burnt);
  const mixed=plateItems.some(x=>x.isMixture);
  const spoiled=parts.filter(x=>x.burnt||x.heat>=80||(["meat","seafood","egg"].includes(x.def.type)&&x.heat<45));
- const weights=battleRules.weights;
+ const weights=rules.weights;
  const metrics=[Math.min(1,unique.size/4),parts.length?prepared.length/parts.length:0,mixed?1:0,cookable.length?cooked.length/cookable.length:0,parts.length?Math.min(1,unique.size/parts.length):0];
  const score=Math.max(0,Math.min(100,Math.round(metrics.reduce((sum,v,i)=>sum+v*weights[i],0)-spoiled.length*15-(parts.some(x=>!allowed.has(x.def.name))?100:0))));
  return {score,metrics,ingredients:[...unique],dish:parts.map(x=>({name:x.def.name,cut:!!x.cut,crushed:!!x.crushed,heat:x.heat||0,method:x.method||"",burnt:!!x.burnt})),mixed};
@@ -64,7 +64,7 @@ function displayName(it){if(it.isMixture)return it.def.name;if(it.def.name==="�
 function mixName(parts){const names=parts.flatMap(x=>baseComponents(x).map(c=>displayName(c)));const uniq=[...new Set(names)];return uniq.slice(0,4).join(" + ")+(uniq.length>4?" 외 "+(uniq.length-4)+"개":"")+" 혼합물"}
 function mixEmoji(parts){const es=[...new Set(parts.flatMap(x=>baseComponents(x).map(c=>c.def.emoji)))];return es.slice(0,3).join("")}
 const typeLabels={liquid:"물 음료",pasta:"면",fruit:"과일",veg:"채소 야채",season:"조미료 양념",sauce:"소스",bread:"빵",meat:"고기 육류",cheese:"치즈 유제품",mix:"믹스",icecream:"아이스크림 디저트",egg:"달걀 계란",fat:"버터 유지",seafood:"해산물",ready:"즉석 식품",sweet:"단맛 디저트"};
-function renderInventory(){const q=$("#ingredientSearch").value.trim().toLowerCase().replace(/\s/g,"");const found=defs.filter(d=>(!battleEmbed||!battleRules||battleRules.allowed.includes(d.name))&&(d.name+" "+(typeLabels[d.type]||"")).toLowerCase().replace(/\s/g,"").includes(q));$("#inventory").innerHTML="";$("#ingredientCount").textContent=found.length+" / "+defs.length+"개 재료";found.forEach(d=>{const b=document.createElement("button");b.className="ing";b.innerHTML='<span class="emoji">'+d.emoji+'</span><span class="ingName">'+d.name+'</span>';b.addEventListener("click",()=>{items.push(createItem(d));invalidateScore();log(d.name+"을(를) 작업대에 꺼냈어요.");render()});$("#inventory").appendChild(b)});if(!found.length)$("#inventory").textContent="검색 결과가 없어요. 다른 이름이나 종류를 입력해 보세요."}
+function renderInventory(){const q=$("#ingredientSearch").value.trim().toLowerCase().replace(/\s/g,"");const found=defs.filter(d=>(!(battleEmbed&&battleRules||soloRules)||(battleEmbed?battleRules:soloRules).allowed.includes(d.name))&&(d.name+" "+(typeLabels[d.type]||"")).toLowerCase().replace(/\s/g,"").includes(q));$("#inventory").innerHTML="";$("#ingredientCount").textContent=found.length+" / "+defs.length+"개 재료";found.forEach(d=>{const b=document.createElement("button");b.className="ing";b.innerHTML='<span class="emoji">'+d.emoji+'</span><span class="ingName">'+d.name+'</span>';b.addEventListener("click",()=>{items.push(createItem(d));invalidateScore();log(d.name+"을(를) 작업대에 꺼냈어요.");render()});$("#inventory").appendChild(b)});if(!found.length)$("#inventory").textContent="검색 결과가 없어요. 다른 이름이나 종류를 입력해 보세요."}
 function foodButton(it){const b=document.createElement("button");b.className="food"+(it.selected?" selected":"");const comp=it.isMixture?'<div class="components">'+baseComponents(it).map(x=>displayName(x)).join(", ")+'</div>':"";b.innerHTML='<div class="name">'+it.def.emoji+" "+displayName(it)+'</div><div class="state">'+stateText(it)+'</div>'+comp+'<div class="heat"><i style="width:'+Math.min(100,it.heat)+'%"></i></div>';b.addEventListener("click",()=>{it.selected=!it.selected;render()});return b}
 function render(){const c=$("#counter");c.innerHTML="";items.forEach(it=>c.appendChild(foodButton(it)));if(!items.length)c.innerHTML='<div class="hint">재료를 왼쪽 보관함에서 꺼내보세요.</div>';$("#selectionText").textContent="선택 "+items.filter(x=>x.selected).length+"개";for(const s of ["microwave","pot","pan"]){const arr=stations[s];$("#"+s+"Inside").textContent=arr.length?arr.map(x=>x.def.emoji+" "+displayName(x)+" ("+stateText(x)+")").join(", "):"비어 있음"}$("#kettleInside").textContent=kettle.hot?"뜨거운 물 준비됨":kettle.water?"물 들어 있음":"물 없음";const p=$("#plate");p.innerHTML=plateItems.length?plateItems.map(x=>'<span title="'+x.def.name+'">'+x.def.emoji+'</span>').join(""):"<span>🍽️</span>";$("#score").textContent=lastScore===null?"미평가":lastScore}
 function selected(){return items.filter(x=>x.selected)}
@@ -146,6 +146,15 @@ function registerDish(name,score,base){
 }
 
 function judge(){
+ if(soloRules){
+  if(soloSubmitted)return log("이미 제출한 챌린지예요. 새 판을 시작하세요.");
+  if(!plateItems.length)return log("먼저 접시에 음식을 담아주세요.");
+  const result=battleDishScore();soloSubmitted=true;lastScore=result.score;
+  $("#score").textContent=result.score;
+  $("#result").textContent="🏆 솔로 챌린지 최종 "+result.score+"점 / 100점 · 재도전은 새 판에서!";
+  $("#judgeBtn").disabled=true;$("#judgeBtn").textContent="✅ 제출 완료";
+  return;
+ }
  if(battleEmbed){
    if(battleSubmitted)return log("이번 배틀에서는 이미 음식을 제출했어요.");
    if(!battleRules)return log("배틀 시작 후 요리를 제출할 수 있어요.");
@@ -343,3 +352,26 @@ $("#judgeBtn").addEventListener("click",judge);$("#resetBtn").addEventListener("
 
 
 $$("[data-cook]").forEach(b=>b.addEventListener("click",()=>cookStation(b.dataset.cook,b.dataset.mode,+b.dataset.sec)));$("#stirPan").addEventListener("click",stirPan);$("#drainPot").addEventListener("click",drainPot);
+
+if(!battleEmbed){
+ const pools=[
+ ["물","스파게티 면","토마토 소스","양파","마늘","파프리카","양송이 버섯","올리브유","소금","후추","소고기","모짜렐라"],
+ ["밥","달걀","당근","대파","양파","김치","두부","간장","참기름","소금","후추","햄"],
+ ["식빵","또띠아","닭고기","오이","양상추","토마토","체다 치즈","마요네즈","머스터드","달걀","버터"],
+ ["바나나","딸기","사과","블루베리","요거트","우유","꿀","생크림","초콜릿","시나몬","레몬"],
+ ["감자","고구마","돼지고기","소고기","양파","양송이 버섯","브로콜리","당근","버터","소금","후추","바비큐 소스"],
+ ["새우","오징어","우동 면","라면 사리","물","애호박","양파","대파","간장","고추장","소금","마늘"]
+ ];
+ const rand=n=>{const x=new Uint32Array(1);crypto.getRandomValues(x);return x[0]%n};
+ const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=rand(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+ const start=$("#soloStart"),exit=$("#soloExit"),info=$("#soloRules");
+ start.addEventListener("click",()=>{
+  soloRules={allowed:shuffle(pools[rand(pools.length)]).slice(0,10),weights:shuffle([15,20,20,20,25])};
+  soloSubmitted=false;resetAll();renderInventory();
+  $("#judgeBtn").disabled=false;$("#judgeBtn").textContent="🍽️ 최종 제출 (1회)";
+  start.textContent="🎲 새로운 랜덤 판";exit.hidden=false;
+  info.textContent="🧺 지정 재료: "+soloRules.allowed.join(" · ")+"\n📊 배점: "+["다양성","손질","혼합","익힘","균형"].map((x,i)=>x+" "+soloRules.weights[i]+"점").join(" · ");
+  info.style.whiteSpace="pre-wrap";
+ });
+ exit.addEventListener("click",()=>{soloRules=null;soloSubmitted=false;resetAll();renderInventory();$("#judgeBtn").disabled=false;$("#judgeBtn").textContent="완성! 평가하기";start.textContent="랜덤 챌린지 시작";exit.hidden=true;info.textContent="";});
+}
