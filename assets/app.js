@@ -367,11 +367,11 @@ if(!battleEmbed){
  const start=$("#soloStart"),exit=$("#soloExit"),info=$("#soloRules");
  start.addEventListener("click",()=>{
   soloRules={allowed:shuffle(pools[rand(pools.length)]).slice(0,10),weights:shuffle([15,20,20,20,25])};
-  soloSubmitted=false;resetAll();renderInventory();
+  soloSubmitted=false;document.body.classList.add("solo-arena");resetAll();renderInventory();
   $("#judgeBtn").disabled=false;$("#judgeBtn").textContent="🍽️ 최종 제출 (1회)";
   start.textContent="🎲 새로운 랜덤 판";exit.hidden=false;
   info.textContent="🧺 지정 재료: "+soloRules.allowed.join(" · ")+"\n📊 배점: "+["다양성","손질","혼합","익힘","균형"].map((x,i)=>x+" "+soloRules.weights[i]+"점").join(" · ");
   info.style.whiteSpace="pre-wrap";
  });
- exit.addEventListener("click",()=>{soloRules=null;soloSubmitted=false;resetAll();renderInventory();$("#judgeBtn").disabled=false;$("#judgeBtn").textContent="완성! 평가하기";start.textContent="랜덤 챌린지 시작";exit.hidden=true;info.textContent="";});
+ exit.addEventListener("click",()=>{soloRules=null;soloSubmitted=false;document.body.classList.remove("solo-arena");resetAll();renderInventory();$("#judgeBtn").disabled=false;$("#judgeBtn").textContent="완성! 평가하기";start.textContent="랜덤 챌린지 시작";exit.hidden=true;info.textContent="";});
 }
