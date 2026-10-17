@@ -150,6 +150,7 @@ function judge(){
   if(soloSubmitted)return log("이미 제출한 챌린지예요. 새 판을 시작하세요.");
   if(!plateItems.length)return log("먼저 접시에 음식을 담아주세요.");
   const result=battleDishScore();soloSubmitted=true;lastScore=result.score;
+  if(result.score>=90 && window.opener && !window.opener.closed){window.opener.postMessage({type:"formwheel-spotlight-result-v1",project:"Cook",value:result.score},"https://semicolonxss.github.io");}
   $("#score").textContent=result.score;
   $("#result").textContent="🏆 솔로 챌린지 최종 "+result.score+"점 / 100점 · 재도전은 새 판에서!";
   $("#judgeBtn").disabled=true;$("#judgeBtn").textContent="✅ 제출 완료";
