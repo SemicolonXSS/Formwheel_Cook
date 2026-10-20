@@ -152,6 +152,7 @@ function judge(){
   const result=battleDishScore();soloSubmitted=true;lastScore=result.score;
   if(result.score>=90 && window.opener && !window.opener.closed){window.opener.postMessage({type:"formwheel-spotlight-result-v1",project:"Cook",value:result.score},"https://semicolonxss.github.io");}
   $("#score").textContent=result.score;
+  window.dispatchEvent(new CustomEvent("fw:cook:score",{detail:{score:result.score,mode:"solo"}}));
   $("#result").textContent="🏆 솔로 챌린지 최종 "+result.score+"점 / 100점 · 재도전은 새 판에서!";
   $("#judgeBtn").disabled=true;$("#judgeBtn").textContent="✅ 제출 완료";
   return;
@@ -309,6 +310,7 @@ function judge(){
  r.innerHTML=html;
  log("완성 평가: "+pts+"점");
  registerDish(best.name,pts,base);
+ window.dispatchEvent(new CustomEvent("fw:cook:score",{detail:{score:pts,mode:"free"}}));
  window.dispatchEvent(new CustomEvent("fw:4050:complete",{detail:{gameId:"cook"}}));
 }
 function resetAll(){items=[];plateItems=[];stations={microwave:[],pot:[],pan:[]};kettle={water:false,hot:false};uid=1;lastScore=null;lastJudgedSignature=null;lastJudgedHtml="";$("#result").className="result";$("#result").textContent="평가 전이에요. 버튼을 여러 번 눌러도 점수는 올라가지 않습니다.";$("#log").innerHTML="";log("새 요리를 시작했어요.");render()}
